@@ -287,7 +287,7 @@ abstract class 	RtfBeautifier 	extends  RtfDocument
 		$prefix 			=  '' ;
 
 		// Last token type ; this is useful for constructs such as \*\word, if the BEAUTIFY_GROUP_SPECIAL_WORDS flag is set.
-		$last_token_type 		=  self::TOKEN_UNKNOWN ;
+		$last_token_type 		=  self::TOKEN_INVALID ;
 
 		// Tells whether last token was "\*" ; this is useful for constructs such as \*\word, if the BEAUTIFY_GROUP_SPECIAL_WORDS flag is set.
 		$last_was_special 		=  false ;
