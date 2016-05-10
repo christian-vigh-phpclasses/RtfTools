@@ -264,16 +264,16 @@ abstract class	RtfTexter	extends		RtfParser
 	/*--------------------------------------------------------------------------------------------------------------
 	
 	    NAME
-	        AsText - Extracts text contents from a PDF file.
+	        AsString - Extracts text contents from a PDF file.
 	
 	    PROTOTYPE
-	        $text	=  $texter -> AsText ( ) ;
+	        $text	=  $texter -> AsString ( ) ;
 	
 	    DESCRIPTION
 	        Returns text contents from a PDF file.
 	
 	 *-------------------------------------------------------------------------------------------------------------*/
-	public function  AsText ( )
+	public function  AsString ( )
 	   {
 	   	$text 		=  '' ;
 
