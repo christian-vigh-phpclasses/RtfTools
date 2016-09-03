@@ -11,11 +11,25 @@
 	Christian Vigh, 04/2016.
 
     HISTORY
-	[Version : 1.0]    [Date : 2016/04/12]     [Author : CV]
+    [Version : 1.0]     [Date : 2016/04/12]     [Author : CV]
 		Initial version.
 
-**************************************************************************************************************/
+    [Version : 1.0.1]   [Date : 2016/08/18]     [Author : CV]
+	. Introduced the RtfException class.
 
+ **************************************************************************************************************/
+
+require_once ( dirname ( __FILE__ ) . '/RtfDocument.phpclass' ) ;
+require_once ( dirname ( __FILE__ ) . '/RtfToken.phpclass' ) ;
+require_once ( dirname ( __FILE__ ) . '/RtfParser.phpclass' ) ;
+
+
+/*==============================================================================================================
+
+    RtfTexter class -
+        A class to extract raw text from an Rtf file.
+
+  ==============================================================================================================*/
 abstract class	RtfTexter	extends		RtfParser
    {
 	// Texter options	
@@ -218,7 +232,7 @@ abstract class	RtfTexter	extends		RtfParser
 			case	'Eol'		:  return ( $this -> Eol ) ;
 			case	'Options'	:  return ( $this -> Options ) ;
 			default :
-				throw ( new \RuntimeException ( "Undefined property \"$member\"." ) ) ;
+				error ( new RtfException ( $member ) ) ;
 		    }
 	    }
 
@@ -228,14 +242,14 @@ abstract class	RtfTexter	extends		RtfParser
 		switch ( $member )
 		   {
 			case	'Eol'		:
-				throw ( new \RuntimeException ( "Property \"$member\" is read-only." ) ) ;
+				error ( new RtfException ( $member ) ) ;
 
 			case	'Options'	:
 				$this -> SetOptions ( $value ) ;
 				break ;
 
 			default :
-				throw ( new \RuntimeException ( "Undefined property \"$member\"." ) ) ;
+				error ( new RtfException ( $member ) ) ;
 		    }
 	    }
 
@@ -286,7 +300,7 @@ abstract class	RtfTexter	extends		RtfParser
 
 
 	public function  __tostring ( )
-	   { return ( $this -> AsText ( ) ) ; }
+	   { return ( $this -> AsString ( ) ) ; }
 
 
 	/*--------------------------------------------------------------------------------------------------------------
@@ -304,7 +318,7 @@ abstract class	RtfTexter	extends		RtfParser
 	public function  SaveTo ( $filename )
 	   {
 	   	if  ( ! ( $fp = fopen ( $filename, "w" ) ) )
-	   		throw ( new \RuntimeException ( "Could not open file \"$filename\" for writing." ) ) ;
+	   		error ( new RtfException ( "Could not open files \"$filename\" for writing." ) ) ;
 
 		$this -> Reset ( ) ;
 		fwrite ( $fp, $this -> AsText ( ) ) ;

@@ -12,7 +12,7 @@
 
 	 ****************************************************************************************************/
 
-	$sample			=  'sample_file.rtf' ;
+	$sample			=  'sample.rtf' ;
 	$bigfile_copies		=  50 ;
 	$very_bigfile_copies	=  1000 ;
 

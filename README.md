@@ -9,24 +9,11 @@ It is up to you to decide whether you will have to handle big files. If you are 
 
 This package currently implements the following classes :
 
-- *RtfStringBeautifier* and *RtfFileBeautifier* : pretty-prints Rtf file contents so that you will be able to compare two Rtf files using utilities such as *diff* or *windiff*. You will find some help here : [README.beautifier.md](README.beautifier.md "README.beautifier.md").
-- *RtfStringParser* and *RtfFileParser* : a generic parser for Rtf contents. It provides a set of *Rtf\*Token* classes that map to underlying Rtf token types, along with a minimal intelligence that allows you to track certain control word values depending on the current nesting level, as well as handling picture or binary data contents ([README.parser.md](README.parser.md "README.parser.md")).
-- *RtfStringTexter* and *RtfFileTexter* : a class that extracts raw text from Rtf contents, with some basic formatting capabilities ([README.texter.md](README.texter.md "README.texter.md")). 
-
+- *RtfStringBeautifier* and *RtfFileBeautifier* : pretty-prints Rtf file contents so that you will be able to compare two Rtf files using utilities such as *diff* or *windiff*. You will find some help here : [help/README.beautifier.md](help/README.beautifier.md "help/README.beautifier.md").
+- *RtfStringParser* and *RtfFileParser* : a generic parser for Rtf contents. It provides a set of *Rtf\*Token* classes that map to underlying Rtf token types, along with a minimal intelligence that allows you to track certain control word values depending on the current nesting level, as well as handling picture or binary data contents ([help/README.parser.md](help/README.parser.md "help/README.parser.md")).
+- *RtfStringTexter* and *RtfFileTexter* : a class that extracts raw text from Rtf contents, with some basic formatting capabilities ([help/README.texter.md](help/README.texter.md "help/README.texter.md")). 
+- *RtfStringTemplater* and *RtfFileTemplater* : a class that allows you to process Rtf templates containing macro language constructs to generate final output documents, such as you would do for mailings ([help/README.templater.md](help/README.templater.md "help/README.templater.md")). .
  
-
-More to come :
-
-- *RtfMerger*, a class that allows you to merge various Rtf files into a single Rtf document (should be available by july 2016).
-- *RtfTemplater*, a class that allows you to preprocess Rtf contents that reference variables, have loops and conditional constructs (should be available by june 2016).
-
-
-# PACKAGING #
-
-The class sources of this package do not belong to any namespace. This is intentional, so that you will be able to add the one of your own if you want to integrate them into some workspace having its own class autoloader.
-
-All the classes throw an exception when an error is encountered. If you have your own error handling mechanism, then you might be interested into substituting exception throwings with it. For that, a reliable method would be to search for the keyword *throw* over all files and replace every occurrence with your error handling routine. You can also use *try/catch* blocks whenever you use the Rtf classes of this package.
-
 
 # DEPENDENCIES #
 
@@ -34,27 +21,6 @@ All the classes in this package rely on the **SearchableFile** class ([http://ww
 
 All the main class files in this package ([RtfBeautifier.phpclass](RtfBeautifier.phpclass "RtfBeautifier.phpclass"), [RtfParser.phpclass](RtfParser.phpclass "RtfParser.phpclass")
  and [RtfTexter.phpclass](RtfTexter.phpclass "RtfTexter.phpclass")) also inherit from the **RtfDocument** class ([RtfDocument.phpclass](RtfDocument.phpclass "RtfDocument.phpclass")).
-
-To use the **RtfBeautifier** class, you will need the following includes :
-
-	require ( 'SearchableFile.phpclass' ) ;
-	require ( 'RtfDocument.phpclass' ) ;
-	require ( 'RtfBeautifier.phpclass' ) ;
-
-Using the **RtfParser** class requires an additional include, *RtfToken.phpclass* so you will need the following includes :
-
-	require ( 'SearchableFile.phpclass' ) ;
-	require ( 'RtfDocument.phpclass' ) ;
-	require ( 'RtfToken.phpclass' ) ;
-	require ( 'RtfParser.phpclass' ) ;
-
-Finally, the **RtfTexter** class inherits from **RtfParser**, so you will need the following includes in this case :
-
-	require ( 'SearchableFile.phpclass' ) ;
-	require ( 'RtfDocument.phpclass' ) ;
-	require ( 'RtfToken.phpclass' ) ;
-	require ( 'RtfParser.phpclass' ) ;
-	require ( 'RtfTexter.phpclass' ) ;
 
 
 # REFERENCES #

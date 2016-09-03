@@ -76,10 +76,54 @@
 	Christian Vigh, 04/2016.
 
     HISTORY
-	[Version : 1.0]    [Date : 2016/04/08]     [Author : CV]
+    [Version : 1.0]	[Date : 2016/04/08]     [Author : CV]
 	Initial version.
 
-**************************************************************************************************************/
+    [Version : 1.0.1]   [Date : 2016/08/18]     [Author : CV]
+	. Introduced the RtfException class.
+
+    [Version : 1.1]	[Date : 2016/08/30]     [Author : CV]
+	. Added the following methods : SeparateTextFromRtf, DecodeSpecialChars
+
+ **************************************************************************************************************/
+
+/*==============================================================================================================
+
+    class RtfException -
+        Implements an exception thrown when an error is encountered while processing RTF files.
+
+  ==============================================================================================================*/
+class  RtfException		extends  \Exception
+   { 
+	public static	$IsObject		=  false ;
+
+	public function  __construct ( $message )
+	   {
+		parent::__construct ( $message ) ;
+	    }
+    }
+
+
+if  ( ! function_exists ( 'warning' ) )
+   {
+	function  warning ( $message )
+	   {
+		//trigger_error ( $message, E_USER_WARNING ) ;
+		echo ( "*** Warning *** $message\n" ) ;
+	    }
+    }
+
+
+if  ( ! function_exists ( 'error' ) )
+   {
+	function  error ( $message )
+	   {
+		if  ( is_string ( $message ) )
+			trigger_error ( $message, E_USER_ERROR ) ;
+		else if (  is_a ( $message, '\Exception' ) )
+			throw $message ;
+	    }
+    }
 
 
 /*==============================================================================================================
@@ -139,8 +183,7 @@ interface  IRtfDocument extends 	\ArrayAccess, \Countable, \Iterator
         Abstract class for each specialized Rtf handling class.
 
   ==============================================================================================================*/
-abstract class  RtfDocument	//extends 	Object
-				implements 	IRtfDocument
+abstract class  RtfDocument	implements 	IRtfDocument
    {
 	// Constantes de conversion
 	const 	TWIPS_PER_CM 			=  566.9291338583 ;
@@ -164,6 +207,192 @@ abstract class  RtfDocument	//extends 	Object
 	const 	TOKEN_NEWLINE 			=   10 ;	// A newline token, that is not really PCDATA
 
 
+	// Conversion tables for characters specified using the \'xy notation
+	protected static	$DecodingTable			=  
+	   [
+		// Pure ascii characters
+		"\\'20 "        => "\x20", "\\'20"      => "\x20",
+		"\\'21 "        => "\x21", "\\'21"      => "\x21",
+		"\\'22 "        => "\x22", "\\'22"      => "\x22",
+		"\\'23 "        => "\x23", "\\'23"      => "\x23",
+		"\\'24 "        => "\x24", "\\'24"      => "\x24",
+		"\\'25 "        => "\x25", "\\'25"      => "\x25",
+		"\\'26 "        => "\x26", "\\'26"      => "\x26",
+		"\\'27 "        => "\x27", "\\'27"      => "\x27",
+		"\\'28 "        => "\x28", "\\'28"      => "\x28",
+		"\\'29 "        => "\x29", "\\'29"      => "\x29",
+		"\\'2A "        => "\x2A", "\\'2A"      => "\x2A",
+		"\\'2B "        => "\x2B", "\\'2B"      => "\x2B",
+		"\\'2C "        => "\x2C", "\\'2C"      => "\x2C",
+		"\\'2D "        => "\x2D", "\\'2D"      => "\x2D",
+		"\\'2E "        => "\x2E", "\\'2E"      => "\x2E",
+		"\\'2F "        => "\x2F", "\\'2F"      => "\x2F",
+		"\\'30 "        => "\x30", "\\'30"      => "\x30",
+		"\\'31 "        => "\x31", "\\'31"      => "\x31",
+		"\\'32 "        => "\x32", "\\'32"      => "\x32",
+		"\\'33 "        => "\x33", "\\'33"      => "\x33",
+		"\\'34 "        => "\x34", "\\'34"      => "\x34",
+		"\\'35 "        => "\x35", "\\'35"      => "\x35",
+		"\\'36 "        => "\x36", "\\'36"      => "\x36",
+		"\\'37 "        => "\x37", "\\'37"      => "\x37",
+		"\\'38 "        => "\x38", "\\'38"      => "\x38",
+		"\\'39 "        => "\x39", "\\'39"      => "\x39",
+		"\\'3A "        => "\x3A", "\\'3A"      => "\x3A",
+		"\\'3B "        => "\x3B", "\\'3B"      => "\x3B",
+		"\\'3C "        => "\x3C", "\\'3C"      => "\x3C",
+		"\\'3D "        => "\x3D", "\\'3D"      => "\x3D",
+		"\\'3E "        => "\x3E", "\\'3E"      => "\x3E",
+		"\\'3F "        => "\x3F", "\\'3F"      => "\x3F",
+		"\\'40 "        => "\x40", "\\'40"      => "\x40",
+		"\\'41 "        => "\x41", "\\'41"      => "\x41",
+		"\\'42 "        => "\x42", "\\'42"      => "\x42",
+		"\\'43 "        => "\x43", "\\'43"      => "\x43",
+		"\\'44 "        => "\x44", "\\'44"      => "\x44",
+		"\\'45 "        => "\x45", "\\'45"      => "\x45",
+		"\\'46 "        => "\x46", "\\'46"      => "\x46",
+		"\\'47 "        => "\x47", "\\'47"      => "\x47",
+		"\\'48 "        => "\x48", "\\'48"      => "\x48",
+		"\\'49 "        => "\x49", "\\'49"      => "\x49",
+		"\\'4A "        => "\x4A", "\\'4A"      => "\x4A",
+		"\\'4B "        => "\x4B", "\\'4B"      => "\x4B",
+		"\\'4C "        => "\x4C", "\\'4C"      => "\x4C",
+		"\\'4D "        => "\x4D", "\\'4D"      => "\x4D",
+		"\\'4E "        => "\x4E", "\\'4E"      => "\x4E",
+		"\\'4F "        => "\x4F", "\\'4F"      => "\x4F",
+		"\\'50 "        => "\x50", "\\'50"      => "\x50",
+		"\\'51 "        => "\x51", "\\'51"      => "\x51",
+		"\\'52 "        => "\x52", "\\'52"      => "\x52",
+		"\\'53 "        => "\x53", "\\'53"      => "\x53",
+		"\\'54 "        => "\x54", "\\'54"      => "\x54",
+		"\\'55 "        => "\x55", "\\'55"      => "\x55",
+		"\\'56 "        => "\x56", "\\'56"      => "\x56",
+		"\\'57 "        => "\x57", "\\'57"      => "\x57",
+		"\\'58 "        => "\x58", "\\'58"      => "\x58",
+		"\\'59 "        => "\x59", "\\'59"      => "\x59",
+		"\\'5A "        => "\x5A", "\\'5A"      => "\x5A",
+		"\\'5B "        => "\x5B", "\\'5B"      => "\x5B",
+		"\\'5C "        => "\x5C", "\\'5C"      => "\x5C",
+		"\\'5D "        => "\x5D", "\\'5D"      => "\x5D",
+		"\\'5E "        => "\x5E", "\\'5E"      => "\x5E",
+		"\\'5F "        => "\x5F", "\\'5F"      => "\x5F",
+		"\\'60 "        => "\x60", "\\'60"      => "\x60",
+		"\\'61 "        => "\x61", "\\'61"      => "\x61",
+		"\\'62 "        => "\x62", "\\'62"      => "\x62",
+		"\\'63 "        => "\x63", "\\'63"      => "\x63",
+		"\\'64 "        => "\x64", "\\'64"      => "\x64",
+		"\\'65 "        => "\x65", "\\'65"      => "\x65",
+		"\\'66 "        => "\x66", "\\'66"      => "\x66",
+		"\\'67 "        => "\x67", "\\'67"      => "\x67",
+		"\\'68 "        => "\x68", "\\'68"      => "\x68",
+		"\\'69 "        => "\x69", "\\'69"      => "\x69",
+		"\\'6A "        => "\x6A", "\\'6A"      => "\x6A",
+		"\\'6B "        => "\x6B", "\\'6B"      => "\x6B",
+		"\\'6C "        => "\x6C", "\\'6C"      => "\x6C",
+		"\\'6D "        => "\x6D", "\\'6D"      => "\x6D",
+		"\\'6E "        => "\x6E", "\\'6E"      => "\x6E",
+		"\\'6F "        => "\x6F", "\\'6F"      => "\x6F",
+		"\\'70 "        => "\x70", "\\'70"      => "\x70",
+		"\\'71 "        => "\x71", "\\'71"      => "\x71",
+		"\\'72 "        => "\x72", "\\'72"      => "\x72",
+		"\\'73 "        => "\x73", "\\'73"      => "\x73",
+		"\\'74 "        => "\x74", "\\'74"      => "\x74",
+		"\\'75 "        => "\x75", "\\'75"      => "\x75",
+		"\\'76 "        => "\x76", "\\'76"      => "\x76",
+		"\\'77 "        => "\x77", "\\'77"      => "\x77",
+		"\\'78 "        => "\x78", "\\'78"      => "\x78",
+		"\\'79 "        => "\x79", "\\'79"      => "\x79",
+		"\\'7A "        => "\x7A", "\\'7A"      => "\x7A",
+		"\\'7B "        => "\x7B", "\\'7B"      => "\x7B",
+		"\\'7C "        => "\x7C", "\\'7C"      => "\x7C",
+		"\\'7D "        => "\x7D", "\\'7D"      => "\x7D",
+		"\\'7E "        => "\x7E", "\\'7E"      => "\x7E",
+		"\\'7F "        => "\x7F", "\\'7F"      => "\x7F",		
+
+		// Curved quotes (‘’) converted into single quotes
+		"\\lquote "	=>  "'",
+		"\\rquote "	=>  "'",
+		'‘'		=>  "'",
+		'’'		=>  "'",
+
+		// French and english quotes
+		"\\'ab "	=>  '"',
+		"\\'bb "	=>  '"',
+		"\\'ab"		=>  '"',
+		"\\'bb"		=>  '"',
+		'«'		=>  '"',
+		'»'		=>  '"',
+		"\\'93"		=>  '"',
+		"\\'94"		=>  '"',
+		"\\'93 "	=>  '"',
+		"\\'94 "	=>  '"',
+		'“'		=>  '"',
+		'”' 		=>  '"',
+
+		// Unbreakable spaces
+		"\\~"		=> ' ',
+		"\\~ "		=> ' ',
+
+		// Line breaks
+		"\r"		=> '',
+		"\n" 		=> '',
+
+	    ] ;
+
+	protected static	$DecodingTableWithAccents	=  
+	   [
+		"\\'80 "	=>  'euro'	,  "\\'80"	=>  'euro',
+		"\\'8c "	=>  'OE'	,  "\\'8c"	=>  'OE',
+		"\\'9c "	=>  'oe'	,  "\\'9c"	=>  'oe',
+		"\\'c0 "	=>  'A'		,  "\\'c0"	=>  'A',
+		"\\'c1 "	=>  'A'		,  "\\'c1"	=>  'A',
+		"\\'c2 "	=>  'A'		,  "\\'c2"	=>  'A',
+		"\\'c3 "	=>  'A'		,  "\\'c3"	=>  'A',
+		"\\'c4 "	=>  'A'		,  "\\'c4"	=>  'A',
+		"\\'c5 "	=>  'A'		,  "\\'c5"	=>  'A',
+		"\\'c6 "	=>  'A'		,  "\\'c6"	=>  'A',
+		"\\'c7 "	=>  'C'		,  "\\'c7"	=>  'C',
+		"\\'c8 "	=>  'E'		,  "\\'c8"	=>  'E',
+		"\\'c9 "	=>  'E'		,  "\\'c9"	=>  'E',
+		"\\'ca "	=>  'E'		,  "\\'ca"	=>  'E',
+		"\\'cb "	=>  'E'		,  "\\'cb"	=>  'E',
+		"\\'cc "	=>  'I'		,  "\\'cc"	=>  'I',
+		"\\'cd "	=>  'I'		,  "\\'cd"	=>  'I',
+		"\\'ce "	=>  'I'		,  "\\'ce"	=>  'I',
+		"\\'cf "	=>  'I'		,  "\\'cf"	=>  'I',
+		"\\'d2 "	=>  'O'		,  "\\'d2"	=>  'O',
+		"\\'d3 "	=>  'O'		,  "\\'d3"	=>  'O',
+		"\\'d4 "	=>  'O'		,  "\\'d4"	=>  'O',
+		"\\'d5 "	=>  'O'		,  "\\'d5"	=>  'O',
+		"\\'d6 "	=>  'O'		,  "\\'d6"	=>  'O',
+		"\\'d9 "	=>  'U'		,  "\\'d9"	=>  'U',
+		"\\'da "	=>  'U'		,  "\\'da"	=>  'U',
+		"\\'db "	=>  'U'		,  "\\'db"	=>  'U',
+		"\\'dc "	=>  'U'		,  "\\'dc"	=>  'U',
+		"\\'e0 "	=>  'a'		,  "\\'e0"	=>  'a',
+		"\\'e1 "	=>  'a'		,  "\\'e1"	=>  'a',
+		"\\'e2 "	=>  'a'		,  "\\'e2"	=>  'a',
+		"\\'e3 "	=>  'a'		,  "\\'e3"	=>  'a',
+		"\\'e4 "	=>  'a'		,  "\\'e4"	=>  'a',
+		"\\'e5 "	=>  'a'		,  "\\'e5"	=>  'a',
+		"\\'e8 "	=>  'e'		,  "\\'e8"	=>  'e',
+		"\\'e9 "	=>  'e'		,  "\\'e9"	=>  'e',
+		"\\'ea "	=>  'e'		,  "\\'ea"	=>  'e',
+		"\\'eb "	=>  'e'		,  "\\'eb"	=>  'e',
+		"\\'ec "	=>  'e'		,  "\\'ec"	=>  'e',
+		"\\'ed "	=>  'e'		,  "\\'ed"	=>  'e',
+		"\\'ee "	=>  'e'		,  "\\'ee"	=>  'e',
+		"\\'ef "	=>  'e'		,  "\\'ef"	=>  'e',
+		"\\'f2 "	=>  'o'		,  "\\'f2"	=>  'o',
+		"\\'f3 "	=>  'o'		,  "\\'f3"	=>  'o',
+		"\\'f4 "	=>  'o'		,  "\\'f4"	=>  'o',
+		"\\'f5 "	=>  'o'		,  "\\'f5"	=>  'o',
+		"\\'f6 "	=>  'o'		,  "\\'f6"	=>  'o',
+		"\\'f9 "	=>  'u'		,  "\\'f9"	=>  'u',
+		"\\'fa "	=>  'u'		,  "\\'fa"	=>  'u',
+		"\\'fb "	=>  'u'		,  "\\'fb"	=>  'u',
+		"\\'fc "	=>  'u'		,  "\\'fc"	=>  'u'
+	    ] ;
+
 	// Whatever the underlying object is handling (a string or a file), all data is read and written in chunks
 	// of data, to avoid too much memory reallocations. The default "record size" for a string is 4Mb, and 16Kb
 	// for a file.
@@ -183,7 +412,6 @@ abstract class  RtfDocument	//extends 	Object
 	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  __construct ( )
 	   {
-		// parent::__construct ( ) ;
 		// Call the "constructor" of the specialized used by the derived class
 		if  ( method_exists ( $this, '__specialized_construct' ) )
 			call_user_func_array ( [ $this, '__specialized_construct' ], func_get_args ( ) ) ;
@@ -197,10 +425,59 @@ abstract class  RtfDocument	//extends 	Object
 	    }
 
 
+	/*--------------------------------------------------------------------------------------------------------------
+
+	    NAME
+	        TwipsToCm - Converts twips to centimeters.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  TwipsToCm ( $twips )
 	   {
 		return ( round ( $twips / self::TWIPS_PER_CM, 2 ) ) ;
 	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+	
+	    NAME
+	        DecodeSpecialChars - Decodes characters specified using the \'xy notation.
+	
+	    PROTOTYPE
+	        $contents	=  $this -> DecodeSpecialChars ( $contents, $convert_accents = false ) ;
+	
+	    DESCRIPTION
+	        Decodes characters using the Rtf notation \'xy and replaces them with their Ansi counterparts.
+	
+	    PARAMETERS
+	        $contents (string) -
+	                Text to be decoded.
+
+		$convert_accents (boolean) -
+			When true, escape sequences representing accentuated characters will be replaced with their
+			ascii equivalent.
+	
+	    RETURN VALUE
+	        Returns the input text, with all special characters converted.
+	
+	    NOTES
+	        The following conversions apply :
+		- Accentuated characters are replaced with their unaccentuated counterparts if the $convert_accents
+		  parameter is true.
+		- All Rtf constructs specifying quotes or doublequotes are replaced with their ascii equivalent
+		- Unbreakable spaces (\~) are replaced with a single space
+		- Carriage returns and newlines are suppressed
+	
+	 *-------------------------------------------------------------------------------------------------------------*/
+	function  DecodeSpecialChars ( $code, $convert_accents = false )
+	   {
+		$result 	=  str_replace ( array_keys ( self::$DecodingTable ), array_values ( self::$DecodingTable ), $code ) ;
+
+		if  ( $convert_accents )
+			$result 	=  str_replace ( array_keys ( self::$DecodingTableWithAccents ), array_values ( self::$DecodingTableWithAccents ), $result ) ;
+
+		return ( $result ) ;
+	    }
+
     }
 
 
@@ -284,9 +561,12 @@ trait  RtfStringSupport
 	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  strchr ( $cset, $start =  0 )
 	   {
+		if  ( $start  >=  $this -> RtfDataLength )
+			return ( false ) ;
+
 		$length 	=  strcspn ( $this -> RtfData, $cset, $start ) ;
 
-		if  ( ! $length  &&  stripos ( $cset, $this -> RtfData [ $start ] )  ===  false )
+		if  ( ! $length  &&  isset ( $this -> RtfData [ $start ] )  &&  stripos ( $cset, $this -> RtfData [ $start ] )  ===  false )
 			return ( false ) ;
 		else
 			return ( $start + $length ) ;
@@ -324,10 +604,10 @@ trait  RtfStringSupport
 		else if  ( is_callable ( $output ) )
 			$callable 	=  true ;
 		else
-			throw ( new \InvalidArgumentException ( "The '\$ouput' parameter of the write() method must either be a valid file resource or a callback." ) ) ;
+			error ( new RtfException ( "The '\$ouput' parameter of the write() method must either be a valid file resource or a callback." ) ) ;
 
 		if  ( $end  <  $start )
-			throw ( new \InvalidArgumentException( "The '\$end' parameter of the Write() method must be greater than or equal to " .
+			error ( new RtfException( "The '\$end' parameter of the Write() method must be greater than or equal to " .
 								"the '\$start' parameter." ) ) ;
 
 		$data 	=  substr ( $this -> RtfData, $start, $end - $start + 1 ) ;
@@ -354,10 +634,10 @@ trait  RtfStringSupport
 	   { return ( $this -> RtfData [ $offset ] ) ; }
 
 	public function  offsetSet 	( $offset, $value )
-	   { throw ( new \RuntimeException ( "Unsupported operation." ) ) ; }
+	   { error ( new RtfException ( "Unsupported operation." ) ) ; }
 
 	public function  offsetUnset 	( $offset )
-	   { throw ( new \RuntimeException ( "Unsupported operation." ) ) ; }
+	   { error ( new RtfException ( "Unsupported operation." ) ) ; }
 
 	private 	$string_position ;
 	private 	$string_length ;
@@ -519,10 +799,10 @@ trait  RtfStringSupport
 	   { return ( $this -> SearchableFile [ $offset ] ) ; }
 
 	public function  offsetSet 	( $offset, $value )
-	   { throw ( new \RuntimeException ( "Unsupported operation." ) ) ; }
+	   { error ( new RtfException ( "Unsupported operation." ) ) ; }
 
 	public function  offsetUnset 	( $offset )
-	   { throw ( new \RuntimeException ( "Unsupported operation." ) ) ; }
+	   { error ( new RtfException ( "Unsupported operation." ) ) ; }
 
 	public function  key 		( )
 	   { return ( $this -> SearchableFile -> key ( ) ) ; }

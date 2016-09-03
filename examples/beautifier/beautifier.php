@@ -19,12 +19,13 @@
 	 * 
 	 ****************************************************************************************************/
 
-	 include ( 'Rtf.php' ) ;
+	 include ( '../../sources/SearchableFile.phpclass' ) ;
+	 include ( '../../sources/RtfBeautifier.phpclass' ) ;
 
 	 // Process 'bigfile.rtf' using the RtfStringBeautifier class
 	 $tm1	=  microtime ( true ) ;
 	 $pp 	=  new RtfStringBeautifier ( file_get_contents ( 'bigfile.rtf' ) ) ;
-	 $pp -> BeautifyTo ( 'bigfile.string.txt' ) ;
+	 $pp -> SaveTo ( 'bigfile.string.txt' ) ;
 	 $tm2	=  microtime ( true ) ;
 
 	 echo ( "Elapsed time for processing 'bigfile.rtf' using RtfStringBeautifier     : " . round ( $tm2 - $tm1, 3 ) . "\n" ) ;
@@ -32,7 +33,7 @@
 	 // Process 'bigfile.rtf' using the RtfFileBeautifier class
 	 $tm1	=  microtime ( true ) ;
 	 $pp 	=  new RtfFileBeautifier ( 'bigfile.rtf' ) ;
-	 $pp -> BeautifyTo ( 'bigfile.file.txt' ) ;
+	 $pp -> SaveTo ( 'bigfile.file.txt' ) ;
 	 $tm2	=  microtime ( true ) ;
 
 	 echo ( "Elapsed time for processing 'bigfile.rtf' using RtfFileBeautifier       : " . round ( $tm2 - $tm1, 3 ) . "\n" ) ;
@@ -40,7 +41,7 @@
 	 // Process 'verybigfile.rtf' using the RtfFileBeautifier class
 	 $tm1	=  microtime ( true ) ;
 	 $pp 	=  new RtfFileBeautifier ( 'verybigfile.rtf' ) ;
-	 $pp -> BeautifyTo ( 'verybigfile.file.txt' ) ;
+	 $pp -> SaveTo ( 'verybigfile.file.txt' ) ;
 	 $tm2	=  microtime ( true ) ;
 
 	 echo ( "Elapsed time for processing 'verybigfile.rtf' using RtfFileBeautifier   : " . round ( $tm2 - $tm1, 3 ) . "\n" ) ;

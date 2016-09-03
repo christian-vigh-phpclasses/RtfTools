@@ -1,0 +1,151 @@
+<?php
+/**************************************************************************************************************
+
+    NAME
+        RtfMerger.phpclass
+
+    DESCRIPTION
+        A class for merging Rtf documents.
+	This class is different from the other Rtf* classes, in that it does not inherit from RtfDocument.
+	It has been designed for fast batch processing, not for in-place modifications.
+
+    AUTHOR
+        Christian Vigh, 08/2016.
+
+    HISTORY
+    [Version : 1.0]	[Date : 2016-08-18]     [Author : CV]
+	Initial version.
+
+ **************************************************************************************************************/
+namespace 	Thrak\Processors\Rtf ;
+
+defined ( '__THRAK_SETUP__' ) or die ( "This file cannot be accessed directly." ) ;
+
+// Used namespaces & objects
+use 		Thrak\System\Object ;
+use		Thrak\Processors\Rtf\RtfDocument ;
+
+
+/*==============================================================================================================
+
+    class RtfMerger -
+        A class for merging Rtf documents.
+
+  ==============================================================================================================*/
+class  RtfMerger		extends		Object
+				implements	\ArrayAccess, \Countable, \IteratorAggregate
+   {
+	const		RTFMERGE_NONE			=   0x0000 ;
+	const		RTFMERGE_STRINGS_AS_FILENAMES	=   0x0001 ;
+	const		RTFMERGE_STRINGS_AS_DATA	=   0x0002 ;
+
+	const		RTFMERGE_STRINGS_MASK		=   0x0003 ;
+
+
+	protected	$Documents	=  [] ;
+	private		$Options	=  false ;
+
+
+	public function	  __construct ( )
+	   {
+		$objects	=  [] ;
+		$argv		=  func_get_args ( ) ;
+		$argc		=  count ( $argv ) ;
+
+
+		for  ( $i = 0 ; $i  <  $argc ; $i ++ )
+		   {
+			if  ( is_subclass_of ( $argv [$i], '\Thrak\Processors\Rtf\RtfDocument' )  ||  is_string ( $argv [$i] ) )
+				$objects []		=  $argv [$i] ;
+			else if  ( is_numeric ( $argv [$i] ) )
+				$this -> Options	=  $argv [$i] ;
+			else
+				error ( new RtfException ( "Bad type for parameter #" . ( $i + 1 ) . "." ) ) ;
+		    }
+
+		if  ( ! $this -> Options )
+			$this -> Options	=  self::RTFMERGE_STRINGS_AS_FILENAMES ;
+
+		foreach  ( $objects  as  $object )
+			$this -> __add_document ( $object, $this -> Options ) ;
+	    }
+
+
+	public function  __get ( $member )
+	   {
+		return ( $this -> $member ) ;
+	    }
+
+
+	public function  __set ( $member, $value )
+	   {
+		switch ( $member )
+		   {
+			case	'Options' :
+				if  ( ! ( $value  &  self::RTFMERGE_STRINGS_MASK ) )
+					$value	|=  self::RTFMERGE_STRINGS_AS_FILENAMES ;
+			
+				$this -> Options	=  $value ;
+				break ;
+
+			default :
+				$this -> $member	=  $value ;
+		    }
+	    }
+
+
+	public function  AddDocument ( RtfDocument  $document )
+	   { $this -> Documents []		=  $document ; }
+	
+
+	public function  AddDocumentFromFile ( $path )
+	   { $this -> Documents []		=  new RtfFileDocument ( $path ) ; }
+
+
+	public function  AddDocumentFromString ( $string )
+	   { $this -> Documents []		=  new RtfStringDocument ( $string ) ; }
+	   
+
+	private function  __add_document ( $object, $options, $index = null )
+	   {
+		if  ( is_subclass_of ( $object, '\Thrak\Processors\Rtf\RtfDocument' ) )
+			$instance	=  $object ;
+		else if  ( is_string ( $object ) )
+		   {
+			if  ( $options & self::RTFMERGE_STRINGS_AS_FILENAMES )
+				$instance	=  new RtfFileDocument ( $object ) ;
+			else if  ( $options & self::RTFMERGE_STRINGS_AS_DATA )
+				$instance	=  new RtfStringDocument ( $object ) ;
+		    }
+
+		if  ( $index  ===  null )
+			$this -> Documents []		=  $instance ;
+		else
+			$this -> Documents [ $index ]	=  $instance ;
+	    }
+
+
+	private function  __merge ( )
+	   {
+	    }
+
+	public function  count ( )
+	   { return ( count ( $this -> Documents ) ) ; }
+
+
+	public function  offsetExists ( $offset )
+	   { return  ( $offset  >=  0  &&  $offset  <  count ( $this -> Documents ) ; }
+
+	public function  offsetGet ( $offset )
+	   { return ( $this -> Documents [$i] ) ; }
+
+	public function  offsetSet ( $offset, $value )
+	   { $this -> __add_document ( $value, $this -> Options, $offset ) ; }
+	
+	public function  offsetUnset ( $offset )
+	   { unset ( $this -> Documents [ $offset ] ) ; }
+
+
+	public function  getIterator ( )
+	   { return ( new \ArrayIterator ( $this -> Documents ) ) ; }
+    }
