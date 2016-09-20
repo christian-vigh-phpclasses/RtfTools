@@ -318,7 +318,7 @@ abstract class	RtfTexter	extends		RtfParser
 	public function  SaveTo ( $filename )
 	   {
 	   	if  ( ! ( $fp = fopen ( $filename, "w" ) ) )
-	   		error ( new RtfException ( "Could not open files \"$filename\" for writing." ) ) ;
+	   		error ( new RtfException ( "Could not open file \"$filename\" for writing." ) ) ;
 
 		$this -> Reset ( ) ;
 		fwrite ( $fp, $this -> AsText ( ) ) ;
@@ -336,7 +336,7 @@ abstract class	RtfTexter	extends		RtfParser
 	
 	    DESCRIPTION
 	        Resets the texter object so that a new parsing can be performed on the same file.
-s	
+	
 	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  Reset ( )
 	   {

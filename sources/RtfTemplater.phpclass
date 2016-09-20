@@ -466,7 +466,7 @@ abstract class 	RtfTemplater 	extends  RtfDocument
 
 		// Translate special characters first, so that we are sure that the text won't contain any special character
 		// representations, such as those using the \'xy notation, or tags specifying quotes
-		$contents			=  $this -> DecodeSpecialChars ( $contents ) ;
+		$contents			=  RtfDocument::DecodeSpecialChars ( $contents ) ;
 
 		// Also remove any newlines and \par constructs within instructions
 		$contents			=  preg_replace ( '/ (\r) | (\n) | (\\\\par \b) /ix', '', $contents ) ;
@@ -756,7 +756,7 @@ abstract class 	RtfTemplater 	extends  RtfDocument
 
 				if  ( $result [ 'error' ] )
 				   {
-					$this -> __warning ( "Invalid expression found in %ELSEIF% statement :\n\t$expression\n{$result [ 'error' ]}" ) ;
+					$this -> __warning ( "Incorrect expression found in %ELSEIF% statement :\n\t$expression\n{$result [ 'error' ]}" ) ;
 					$positive_condition_found	=  false ;
 				    }
 				else
@@ -1230,8 +1230,9 @@ abstract class 	RtfTemplater 	extends  RtfDocument
 				$variable_defs []	=  "global \$$vname" ;
 			else
 			   {
-				$variable_defs []	=  "\$$vname = ''" ;
+				$variable_defs []		=  "\$$vname = ''" ;
 				$this -> __warning ( "Variable $vname is not defined." ) ;
+				$this -> Variables [ $vname ]	= '' ;
 			    }
 
 		    }
@@ -1299,7 +1300,7 @@ abstract class 	RtfTemplater 	extends  RtfDocument
 	private function  __warning ( $message )
 	   {
 		if  ( $this -> Warnings )
-			warning ( $message ) ;
+			echo ( "*** Warning *** $message\n" ) ;
 	    }
     }
 

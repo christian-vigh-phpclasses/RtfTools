@@ -12,7 +12,8 @@ This package currently implements the following classes :
 - *RtfStringBeautifier* and *RtfFileBeautifier* : pretty-prints Rtf file contents so that you will be able to compare two Rtf files using utilities such as *diff* or *windiff*. You will find some help here : [help/README.beautifier.md](help/README.beautifier.md "help/README.beautifier.md").
 - *RtfStringParser* and *RtfFileParser* : a generic parser for Rtf contents. It provides a set of *Rtf\*Token* classes that map to underlying Rtf token types, along with a minimal intelligence that allows you to track certain control word values depending on the current nesting level, as well as handling picture or binary data contents ([help/README.parser.md](help/README.parser.md "help/README.parser.md")).
 - *RtfStringTexter* and *RtfFileTexter* : a class that extracts raw text from Rtf contents, with some basic formatting capabilities ([help/README.texter.md](help/README.texter.md "help/README.texter.md")). 
-- *RtfStringTemplater* and *RtfFileTemplater* : a class that allows you to process Rtf templates containing macro language constructs to generate final output documents, such as you would do for mailings ([help/README.templater.md](help/README.templater.md "help/README.templater.md")). .
+- *RtfStringTemplater* and *RtfFileTemplater* : a class that allows you to process Rtf templates containing macro language constructs to generate final output documents, such as you would do for mailings ([help/README.templater.md](help/README.templater.md "help/README.templater.md")).
+- *RtfMerger* : a class that allows you to merge multiple Rtf documents into a single one ([help/README.merger.md](help/README.merger.md "help/README.merger.md")). This is the only Rtf-processing class of this package that does not inherit from *RtfDocument*.
  
 
 # DEPENDENCIES #
@@ -43,4 +44,10 @@ or visit his page :
 
 	[http://interglacial.com/~sburke/](http://interglacial.com/~sburke/ "http://interglacial.com/~sburke/")
 
+# SUPPORT #
 
+If you have problems using one of the **RtfTools** class, or get strange results, please feel free to contact me at the following address :
+
+	christian.vigh@wuthering-bytes.com
+
+Don't hesitate to send me the Rtf documents that caused the failure as attachments in your email ; I will be happy to answer you !

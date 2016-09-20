@@ -4,6 +4,14 @@ To run the examples, simply follow the instructions below.
 
 # Example script : beautify/beautify.php #
 
+This sample scripts simply beautifies the contents of file *sample.rtf* and echo them on standard output.
+
+# Example script : beautify/beautify_perf.php #
+
+This script tries, apart from beautifying sample files, tries to do a performance comparison between the **RtfStringBeautifier** and **RtfFileBeautifier** classes.
+
+It also tests the performances of the **RtfFileBeautifier** class on a file which should be too large to fit into memory.
+
 ## Generating the sample files ##
 
 The sample file, used by the by the *create\_sample.php* script described above, contains the first two pages of the latest Rtf format specification from Microsoft, which you can download here :
@@ -34,5 +42,11 @@ This script echoes on its standard output the contents of file *sample.rtf*, loc
 # Example script : templater/templater.php #
 
 This script echoes on its standard output the contents of file *sample.rtf*, located in the same directory, with all the templating instructions evaluated.
+
+
+# Example script : merger/merger.php #
+
+This script saves in file *output.rtf* the merged contents of files *sample1.rtf* through *sample4.rtf*.
+ 
 
  

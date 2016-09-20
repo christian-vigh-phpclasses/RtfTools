@@ -83,7 +83,11 @@
 	. Introduced the RtfException class.
 
     [Version : 1.1]	[Date : 2016/08/30]     [Author : CV]
-	. Added the following methods : SeparateTextFromRtf, DecodeSpecialChars
+	. Added the following methods to the RtfDocument class : SeparateTextFromRtf, DecodeSpecialChars, 
+	  ToClosingDelimiter, GetCompoundTag, GetDocumentStart, EscapeString
+	. Added the following methods to the RtfDocument class : AsString and __tostring. Added the get_contents()
+	  method to the IrtfDocument interface. Updated the RtfFileSupport and RtfStringSupport traits accordingly.
+	. Added the strpos() and strlen() methods to the RtfFileSupport and RtfStringSupport traits.
 
  **************************************************************************************************************/
 
@@ -108,8 +112,7 @@ if  ( ! function_exists ( 'warning' ) )
    {
 	function  warning ( $message )
 	   {
-		//trigger_error ( $message, E_USER_WARNING ) ;
-		echo ( "*** Warning *** $message\n" ) ;
+		trigger_error ( $message, E_USER_WARNING ) ;
 	    }
     }
 
@@ -140,6 +143,10 @@ interface  IRtfDocument extends 	\ArrayAccess, \Countable, \Iterator
 
 	 *-------------------------------------------------------------------------------------------------------------*/
 
+	// get_contents -
+	//	Retrieves the whole Rtf contents.
+	function  get_contents ( ) ;
+
    	// to_closing_delimiter -
    	//	Finds the closing delimiter.
    	function  to_closing_delimiter 	( $start = 0 ) ;
@@ -147,6 +154,14 @@ interface  IRtfDocument extends 	\ArrayAccess, \Countable, \Iterator
 	// strchr -
 	//	This method is actually using the strcspn() function.
 	function  strchr  		( $cset, $start = 0 ) ;
+
+	// strlen - 
+	//	Returns the length of the underlying Rtf contents.
+	function  strlen		( ) ;
+
+	// strpos -
+	//	Locates a string within a document.
+	function  strpos		( $searched_string, $offset = 0 ) ;
 
 	// substr -
 	//	Extracts a substring from Rtf contents. Works like the substr() function.
@@ -412,6 +427,8 @@ abstract class  RtfDocument	implements 	IRtfDocument
 	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  __construct ( )
 	   {
+		//parent::__construct ( ) ;
+
 		// Call the "constructor" of the specialized used by the derived class
 		if  ( method_exists ( $this, '__specialized_construct' ) )
 			call_user_func_array ( [ $this, '__specialized_construct' ], func_get_args ( ) ) ;
@@ -428,13 +445,17 @@ abstract class  RtfDocument	implements 	IRtfDocument
 	/*--------------------------------------------------------------------------------------------------------------
 
 	    NAME
-	        TwipsToCm - Converts twips to centimeters.
+	        AsString, __tostring 
+
+	    DESCRIPTION
+		Returns the whole Rtf document contents.
 
 	 *-------------------------------------------------------------------------------------------------------------*/
-	public function  TwipsToCm ( $twips )
-	   {
-		return ( round ( $twips / self::TWIPS_PER_CM, 2 ) ) ;
-	    }
+	public function  AsString ( )
+	   { return ( $this -> get_contents ( ) ) ; }
+
+	public function  __tostring ( )
+	   { return ( $this -> get_contents ( ) ) ; }
 
 
 	/*--------------------------------------------------------------------------------------------------------------
@@ -468,7 +489,7 @@ abstract class  RtfDocument	implements 	IRtfDocument
 		- Carriage returns and newlines are suppressed
 	
 	 *-------------------------------------------------------------------------------------------------------------*/
-	function  DecodeSpecialChars ( $code, $convert_accents = false )
+	public static function  DecodeSpecialChars ( $code, $convert_accents = false )
 	   {
 		$result 	=  str_replace ( array_keys ( self::$DecodingTable ), array_values ( self::$DecodingTable ), $code ) ;
 
@@ -477,6 +498,234 @@ abstract class  RtfDocument	implements 	IRtfDocument
 
 		return ( $result ) ;
 	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+	
+	    NAME
+	        EscapeString - Escapes string data.
+	
+	    PROTOTYPE
+	        $escaped_value	=  RtfDocument::EscapeString ( $value ) ;
+	
+	    DESCRIPTION
+	        Some strings (designated as #PCDATA in the Rtf specifications) may contain characters that could be
+		interpreted as Rtf instructions ; such characters are :
+		- "\", which starts the name of a tag, such as "\rtf1"
+		- "{", which starts a nested construct
+		- "}", which ends a nested construct
+		All these characters must be represented as "\\", "\{" and "\}", respectively
+	
+	    PARAMETERS
+	        $value (string) -
+	                String value to be escaped.
+	
+	    RETURN VALUE
+	        Returns the escaped value.
+	
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public static function  EscapeString ( $value )
+	   {
+		$result		=  str_replace 
+		   (
+			[ '\\'  , '{'  , '}'   ],
+			[ '\\\\', '\\{', '\\}' ],
+			$value 
+		    ) ;
+
+		return ( $result ) ;
+	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+	
+	    NAME
+	        GetCompoundTag - Extracts a compound tag from a string
+	
+	    PROTOTYPE
+	        $contents	=  RtfDocument::GetCompoundTag ( $data, $tag, $offset = 0, $include_tag = false ) ;
+	
+	    DESCRIPTION
+	        Extracts a compound tag from a string, handling nesting levels.
+	
+	    PARAMETERS
+	        $data (string) -
+	                Rtf data from where the tag is to be searched.
+
+		$tag (string) -
+			An Rtf tag, including the leading backslash, such as '\fonttbl'.
+
+		$offset (integer) -
+			Position in $data where the search should begin.
+
+		$include_tag (boolean) -
+			When true, the searched tag will also be included in the output results.
+	
+	    RETURN VALUE
+	        Returns the tag contents (including nested tags) if found, or false otherwise.
+	
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public static function  GetCompoundTag ( $data, $tag, $offset = 0, $include_tag = false )
+	   {
+		if  ( ( $start = strpos ( $data, $tag, $offset ) )  !==  false )
+		   {
+			$tag_length	= strlen ( $tag ) ;
+
+			if  ( ! $include_tag )
+			   {
+				$start	+=  $tag_length ;
+				$offset  =  0 ;
+			    }
+			else
+				$offset  =  $tag_length ;
+
+			$real_start	=  
+			$end		=  self::ToClosingDelimiter ( $data, $start + $offset ) ;
+
+			if  ( $end  !== false )
+				return ( substr ( $data, $start, $end - $start ) ) ;
+		    }
+
+		return ( false ) ;
+	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+	
+	    NAME
+	        ToClosingDelimiter - Finds the next closing delimiter in a string.
+	
+	    PROTOTYPE
+	        $end	=  $document -> ToClosingDelimiter ( $string, $start = 0 ) ;
+	
+	    DESCRIPTION
+	        Although the RtfStringDocument and RtfFileDocument implement a to_closing_delimiter() method that search
+		string or file contents until a closing brace has been found, it is sometimes handy to do that on a 
+		simple string. This is why there is also a generic closing delimiter search method that operates on
+		strings, whatever the underlying document implementation is.
+	
+	    PARAMETERS
+	        $string (string) -
+	                String to be searched.
+
+		$start (integer) -
+			Start position in the string. It must be AFTER the opening delimiter.
+	
+	    RETURN VALUE
+	        Returns the position in $string of the ending delimiter, or false if none has been found.
+	
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public static function  ToClosingDelimiter ( $string, $start = 0 )
+	   {
+		$text_length 	=  strlen ( $string ) ;
+		$remaining 	=  $text_length - $start ;
+
+		if  ( $remaining  <  0 )
+			return ( false ) ;
+
+		$end 		=  $start ;
+		$nesting_level 	=  1 ;
+
+		while  ( $end  <  $text_length  &&  $nesting_level  !=  0 )
+		   {
+			$length		=  strcspn ( $string, '{}', $end ) ;
+			$ch 		=  $string [ $end + $length ] ;
+
+			if  ( $ch  ==  '{' )
+				$nesting_level ++ ;
+			else
+				$nesting_level -- ;
+
+			$end 	+=  $length + 1 ;
+		    }
+
+		if  ( ! $nesting_level )
+			return ( $end - 1 ) ;
+		else
+			return ( false ) ;
+	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+
+	    NAME
+	        TwipsToCm - Converts twips to centimeters.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public static function  TwipsToCm ( $twips )
+	   {
+		return ( round ( $twips / self::TWIPS_PER_CM, 2 ) ) ;
+	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+	
+	    NAME
+	        GetDocumentStart - Returns the offset of an Rtf document start
+	
+	    PROTOTYPE
+	        $offset			=  $document -> get_document_start ( $document ) ;
+	
+	    DESCRIPTION
+	        We could say that an Rtf document contains a header part and a body part. The header part contains things
+		that are common to the whole document, such as font tables, color tables, style sheets, etc.
+		Since several sections in a Rtf header are optional, but must be specified in a certain order, this method
+		tries to locate the position of the last optional section available in the document header.
+		If none found (which should not be the case, the first section start (\sectd) is searched, then, as last
+		resort, the first paragraph start (\pard).
+	
+	    PARAMETERS
+	        $document (RtfDocument) -
+	                An object inheriting from the RtfDocument class.
+	
+	    RETURN VALUE
+	        The offset of the Rtf body part start.
+	
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  get_document_start ( ) 
+	   {
+		// Normally, the \*\generator tag should the last one in the header part, but since its optional, we have to take
+		// into account many optional tags that may appear before (normally, the \xmlnstbl and \info tags belong to the
+		// body part ; however, they will be considered as belonging to the header part)
+		static		$header_tags	=
+		   [
+			'\xmlnstbl'		=>  true,
+			'\info'			=>  true,
+			'\generator'		=>  true,
+			'\rsidtbl'		=>  true,
+			'\revtbl'		=>  true,
+			'\listtable'		=>  true,
+			'\latentstyles'		=>  true,
+			'\stylesheet'		=>  true,
+			'\colortbl'		=>  true,
+			'\filetbl'		=>  true,
+			'\fonttbl'		=>  true,
+		    ] ;
+
+		// Try to limit the searched string length ; for that, locating a '\sectd' or '\pard' entry definitely tells us
+		// that we are in the body part
+		$section_start	=  $this -> strpos ( '\\sectd' ) ;
+
+		if  ( $section_start  ===  false )
+			$section_start	=  $this -> strpos ( '\\pard' ) ;
+
+		// Look for the first optional header tag present
+		foreach  ( $header_tags  as  $header_tag => $compound )
+		   {
+			// Tag found : locate its end and split the header/body parts
+			if  ( ( $index = $this -> strpos ( $header_tag ) )  !==  false )
+			   {
+				$end	=  $this -> to_closing_delimiter ( $index ) ;
+
+				return ( $end ) ;
+			    }
+		    }
+
+		// No tag found : arbitriraly fix that the body starts with either a \sectd or a \pard tag
+		return ( $section_start ) ;
+	    }
+
+
 
     }
 
@@ -509,6 +758,18 @@ trait  RtfStringSupport
 		$this -> RtfDataLength	=  strlen ( $rtfdata ) ;
 		$this -> RecordSize 	=  $chunk_size ;
 		$this -> Name 		=  '(string contents)' ;
+	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+
+   	    get_contents :
+		Returns Rtf document contents.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  get_contents ( )
+	   {
+		return ( $this -> RtfData ) ;
 	    }
 
 
@@ -556,7 +817,7 @@ trait  RtfStringSupport
 	/*--------------------------------------------------------------------------------------------------------------
 
    	    strchr :
-		Actually uses the strcspn() function.
+		Actually uses the strcspn() function, like the SearchableFileClass is doing.
 
 	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  strchr ( $cset, $start =  0 )
@@ -570,6 +831,35 @@ trait  RtfStringSupport
 			return ( false ) ;
 		else
 			return ( $start + $length ) ;
+	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+
+   	    strlen :
+		Returns the length of the underlying Rtf contents.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  strlen ( )
+	   {
+		return ( $this -> RtfDataLength ) ;
+	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+
+   	    strpos :
+		Locates a string within the document.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  strpos ( $search, $start =  0 )
+	   {
+		if  ( $start  >=  $this -> RtfDataLength )
+			return ( false ) ;
+
+		$offset 	=  strpos ( $this -> RtfData, $search, $start ) ;
+
+		return ( $offset ) ;
 	    }
 
 
@@ -706,7 +996,19 @@ trait  RtfStringSupport
 	    }
 
 
- 	/*---------------------------------------------------------------------------------------------------*
+	/*--------------------------------------------------------------------------------------------------------------
+
+   	    get_contents :
+		Returns Rtf document contents.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  get_contents ( )
+	   {
+		return ( $this -> SearchableFile -> get_contents ( ) ) ;
+	    }
+
+
+ 	/*-------------------------------------------------------------------------------------------------------------*
 
 	    to_closing_delimiter -
 		Finds the closing curly brace corresponding to the opening one located at the given index
@@ -715,7 +1017,7 @@ trait  RtfStringSupport
 		Returns the index of the closing brace corresponding to the one specified or false if no
 		corresponding closing delimiter was found.
 
-	 *---------------------------------------------------------------------------------------------------*/
+	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  to_closing_delimiter ( $start = 0 )
 	   {
 		$text_length 	=  count ( $this ) ;
@@ -755,6 +1057,28 @@ trait  RtfStringSupport
 	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  strchr ( $cset, $start =  0 )
 	   { return ( $this -> SearchableFile -> strchr ( $cset, $start ) ) ; }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+
+   	    strlen :
+		Returns the length of the underlying Rtf contents.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  strlen ( )
+	   {
+		return ( $this -> SearchableFile -> Filesize ) ;
+	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+
+   	    strpos :
+		Uses the strpos() method of the SearchableFile class.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  strpos ( $search, $start =  0 )
+	   { return ( $this -> SearchableFile -> strpos ( $search, $start ) ) ; }
 
 
 	/*--------------------------------------------------------------------------------------------------------------
