@@ -89,6 +89,9 @@
 	  method to the IrtfDocument interface. Updated the RtfFileSupport and RtfStringSupport traits accordingly.
 	. Added the strpos() and strlen() methods to the RtfFileSupport and RtfStringSupport traits.
 
+    [Version : 1.1.1]	[Date : 2016/09/21]     [Author : CV]
+	. Added the SaveTo() method to the RtfStringDocument and RtfFileDocument classes.
+	
  **************************************************************************************************************/
 
 require_once ( dirname ( __FILE__ ) . '/SearchableFile.phpclass' ) ;
@@ -1163,6 +1166,33 @@ class  RtfStringDocument 	extends 	RtfDocument
 	   {
 		parent::__construct ( $rtfdata, $chunk_size ) ;
 	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+
+	    NAME
+		SaveTo - Generates a final document from a template, as an external file.
+
+	    PROTOTYPE
+	        $text 	=  $document -> SaveTo ( $output ) ;
+
+	    DESCRIPTION
+	        Saves the contents of the underlying document template to an external file.
+
+	    PARAMETERS
+	    	$output (string) -
+	    		Name of the file where the input Rtf data is to be written.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  SaveTo ( $filename )
+	   {
+		if  ( ! ( $fp = fopen ( $filename, "w" ) ) )
+			error ( new RtfException ( "Could not open file \"$filename\" for writing." ) ) ;
+
+		fwrite ( $fp, $this -> AsString ( ) ) ;
+
+		fclose ( $fp ) ;
+	    }
     }
 
 
@@ -1181,4 +1211,31 @@ class  RtfStringDocument 	extends 	RtfDocument
     	   {
     		parent::__construct ( $file, $record_size ) ;
     	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+
+	    NAME
+		SaveTo - Generates a final document from a template, as an external file.
+
+	    PROTOTYPE
+	        $text 	=  $document -> SaveTo ( $output ) ;
+
+	    DESCRIPTION
+	        Saves the contents of the underlying document template to an external file.
+
+	    PARAMETERS
+	    	$output (string) -
+	    		Name of the file where the input Rtf data is to be written.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  SaveTo ( $filename )
+	   {
+		if  ( ! ( $fp = fopen ( $filename, "w" ) ) )
+			error ( new RtfException ( "Could not open file \"$filename\" for writing." ) ) ;
+
+		$this -> SearchableFile -> Write ( $fp, 0 ) ;
+
+		fclose ( $fp ) ;
+	    }
     }
