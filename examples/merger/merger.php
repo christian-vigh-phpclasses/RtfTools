@@ -6,7 +6,6 @@
 	 * 
 	 ****************************************************************************************************/
 
-	include ( '../../sources/SearchableFile.phpclass' ) ;
 	include ( '../../sources/RtfMerger.phpclass' ) ;
 
 	$merger	=  new RtfMerger ( 'sample1.rtf', 'sample2.rtf', 'sample3.rtf', 'sample4.rtf' ) ;

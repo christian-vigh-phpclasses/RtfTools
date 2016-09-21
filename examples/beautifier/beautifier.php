@@ -6,7 +6,6 @@
 	 * 
 	 ****************************************************************************************************/
 
-	 include ( '../../sources/SearchableFile.phpclass' ) ;
 	 include ( '../../sources/RtfBeautifier.phpclass' ) ;
 
 	 if  ( php_sapi_name ( )  !=  'cli' )

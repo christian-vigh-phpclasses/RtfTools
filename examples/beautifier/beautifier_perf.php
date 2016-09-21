@@ -19,7 +19,6 @@
 	 * 
 	 ****************************************************************************************************/
 
-	 include ( '../../sources/SearchableFile.phpclass' ) ;
 	 include ( '../../sources/RtfBeautifier.phpclass' ) ;
 
 	 if  ( ! file_exists ( 'bigfile.rtf' ) )

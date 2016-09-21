@@ -6,7 +6,6 @@
 	 * 
 	 ****************************************************************************************************/
 
-	include ( '../../sources/SearchableFile.phpclass' ) ;
 	include ( '../../sources/RtfTexter.phpclass' ) ;
 
 	$texter	=  new RtfFileTexter ( 'sample.rtf' ) ;

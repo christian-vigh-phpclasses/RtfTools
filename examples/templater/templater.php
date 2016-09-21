@@ -9,7 +9,6 @@
 	 * 
 	 ****************************************************************************************************/
 
-	include ( '../../sources/SearchableFile.phpclass' ) ;
 	include ( '../../sources/RtfTemplater.phpclass' ) ;
 
 	$variables	=  
