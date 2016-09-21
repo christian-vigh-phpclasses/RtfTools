@@ -143,7 +143,7 @@ class  RtfMerger		//extends		Object
 		// - An integer value, which will be used to set the $Options property (RTFMERGE_* constants)
 		for  ( $i = 0 ; $i  <  $argc ; $i ++ )
 		   {
-			if  ( is_subclass_of ( $argv [$i], '\Thrak\Processors\Rtf\RtfDocument' )  ||  is_string ( $argv [$i] ) )
+			if  ( is_subclass_of ( $argv [$i], 'RtfDocument' )  ||  is_string ( $argv [$i] ) )
 				$objects []		=  $argv [$i] ;
 			else if  ( is_numeric ( $argv [$i] ) )
 				$this -> Options	=  $argv [$i] ;
@@ -187,7 +187,7 @@ class  RtfMerger		//extends		Object
 		if  ( isset ( $this -> GlobalHeader -> $member ) )
 			return ( $this -> GlobalHeader -> $member ) ;
 		else
-			error ( new \Thrak\System\UndefinedPropertyException ( $member ) ) ;
+			error ( new RuntimeException ( "Undefined property \"$member\"" ) ) ;
 	    }
 
 
@@ -196,7 +196,7 @@ class  RtfMerger		//extends		Object
 		if  ( isset ( $this -> GlobalHeader -> $member ) )
 			$this -> GlobalHeader -> $member	=  $value ;
 		else
-			error ( new \Thrak\System\UndefinedPropertyException ( $member ) ) ;
+			error ( new RuntimeException ( "Undefined property \"$member\"" ) ) ;
 	    }
 
 
@@ -236,7 +236,7 @@ class  RtfMerger		//extends		Object
 	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  Add ( $object )
 	   {
-		if  ( is_subclass_of ( $object, '\Thrak\Processors\Rtf\RtfDocument' ) )
+		if  ( is_subclass_of ( $object, 'RtfDocument' ) )
 			$instance	=  $object ;
 		else if  ( is_string ( $object ) )
 		   {
