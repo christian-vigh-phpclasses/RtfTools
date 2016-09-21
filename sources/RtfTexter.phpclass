@@ -17,6 +17,9 @@
     [Version : 1.0.1]   [Date : 2016/08/18]     [Author : CV]
 	. Introduced the RtfException class.
 
+    [Version : 1.0.2]   [Date : 2016/09/21]     [Author : CV]
+	. The SaveTo() method was calling the non-existing AsText() method instead of AsString().
+
  **************************************************************************************************************/
 
 require_once ( dirname ( __FILE__ ) . '/RtfDocument.phpclass' ) ;
@@ -218,7 +221,7 @@ abstract class	RtfTexter	extends		RtfParser
 	
 	    DESCRIPTION
 	        Defines the formatting options that will be applied during the text extraction process performed by the
-		AsText() and SaveTo() methods.
+		AsString() and SaveTo() methods.
 
 	    NOTES
 		The __get() and __set() magic methods are here to make available the Options and Eol properties (the
@@ -321,7 +324,7 @@ abstract class	RtfTexter	extends		RtfParser
 	   		error ( new RtfException ( "Could not open file \"$filename\" for writing." ) ) ;
 
 		$this -> Reset ( ) ;
-		fwrite ( $fp, $this -> AsText ( ) ) ;
+		fwrite ( $fp, $this -> AsString ( ) ) ;
 	   	fclose ( $fp ) ;
 	    }
 
