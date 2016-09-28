@@ -8,7 +8,6 @@ It includes a small macro language that you can use to generate customized outpu
 
 The following example instantiates an **RtfFileTemplater** object, passing it the name of a template Rtf file (*template.rtf*), then saves the preprocessed contents to output file *sample.rtf*. Note that a set of variables is also included in the templating process, provided by the *$variables* array :
 
-	include ( 'path/to/SearchableFile.phpclass' ) ;
 	include ( 'path/to/RtfTemplater.phpclass' ) ;
 
 	$variables	=  

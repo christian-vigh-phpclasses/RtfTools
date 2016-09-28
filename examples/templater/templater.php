@@ -20,4 +20,4 @@
 	    ] ;
 
 	 $templater	=  new RtfStringTemplater ( file_get_contents ( 'template.rtf' ), $variables ) ;
-	 echo $templater -> AsString ( 'sample.rtf' ) ;
+	 $templater -> SaveTo ( 'sample.rtf' ) ;

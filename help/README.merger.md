@@ -13,19 +13,19 @@ The above example specified the names of the files to be merged ; but you can al
 
 	$merger 	=  new RtfMerger ( ) ;
 	$merger -> Add ( new RtfFileDocument ( 'sample3.rtf' ) ) ;
-	$merger -> Add ( new RtfStringDocument ( 'sample4.rtf' ) ) ;
+	$merger -> Add ( new RtfStringDocument ( file_get_contents ( 'sample4.rtf' ) ) ) ;
 
 	$template_variables 	=  [ 'a' => 'this is variable A', 'b' => 'this is variable b' ] ;
 	$merger -> Add ( new RtfFileTemplater ( 'sample5.rtf', $template_variables ) ;	
 
 So you can see that you can specify both strings (filenames) and objects inheriting from the **RtfDocument** class ; however, the way strings are handled can be modified. You can tell for example that every string specified either to the class constructor or to the *Add()* method should be considered as pure Rtf contents, instead of being seen as a file name. This can be done by specifying the *RtfMerger::RTFMERGE\_STRINGS\_AS\_DATA* option to the constructor, or by setting the *Options* property :
 
-	$merger 		=  new  RtfMerger ( RtfMerger::RTFMERGE\_STRINGS\_AS\_DATA ) ;
+	$merger 		=  new  RtfMerger ( RtfMerger::RTFMERGE_STRINGS_AS_DATA ) ;
 
 Other version :
 
 	$merger 			=  new RtfMerger ( ) ;
-	$merger -> Options 	=  RtfMerger::RTFMERGE\_STRINGS\_AS\_DATA ;
+	$merger -> Options 	=  RtfMerger::RTFMERGE_STRINGS_AS_DATA ;
 
 Now, every data you will add as a string will be considered as Rtf data, not as a filename :
 
