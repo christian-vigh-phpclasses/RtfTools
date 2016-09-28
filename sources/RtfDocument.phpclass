@@ -91,6 +91,11 @@
 
     [Version : 1.1.1]	[Date : 2016/09/21]     [Author : CV]
 	. Added the SaveTo() method to the RtfStringDocument and RtfFileDocument classes.
+
+    [Version : 1.1.2]	[Date : 2016/09/24]     [Author : CV]
+	. The RtfDocument::get_document_start() method was uselessly searching for a "\sectd" or "\pard" tag
+	  before looking at the last header tags available.
+	. The $Name property now contains an empty string when the underlying class is string-based.
 	
  **************************************************************************************************************/
 
@@ -145,13 +150,21 @@ interface  IRtfDocument extends 	\ArrayAccess, \Countable, \Iterator
    {
 	/*--------------------------------------------------------------------------------------------------------------
 
+		Contents-related methods.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	function  AsString		( ) ;
+	function  SaveTo		( $filename ) ;
+
+	/*--------------------------------------------------------------------------------------------------------------
+
 		Abstract methods related to string manipulation.
 
 	 *-------------------------------------------------------------------------------------------------------------*/
 
 	// get_contents -
 	//	Retrieves the whole Rtf contents.
-	function  get_contents ( ) ;
+	function  get_contents		( ) ;
 
    	// to_closing_delimiter -
    	//	Finds the closing delimiter.
@@ -175,7 +188,7 @@ interface  IRtfDocument extends 	\ArrayAccess, \Countable, \Iterator
 
 	// write -
 	//	Writes data to a stream/file resource.
-	function  write ( $fp, $start, $end ) ;
+	function  write ( $fp, $start, $end = false ) ;
 
 	/*--------------------------------------------------------------------------------------------------------------
 
@@ -206,6 +219,8 @@ interface  IRtfDocument extends 	\ArrayAccess, \Countable, \Iterator
   ==============================================================================================================*/
 abstract class  RtfDocument	implements 	IRtfDocument
    {
+	public static	$DEBUG			=  true ;
+
 	// Constantes de conversion
 	const 	TWIPS_PER_CM 			=  566.9291338583 ;
 
@@ -418,7 +433,7 @@ abstract class  RtfDocument	implements 	IRtfDocument
 	// of data, to avoid too much memory reallocations. The default "record size" for a string is 4Mb, and 16Kb
 	// for a file.
 	protected 	$RecordSize ;
-	// Name (either a file name or the string "(string contents)"
+	// Name (either a file name or an empty string)
 	public 		$Name ;
 
 
@@ -599,6 +614,96 @@ abstract class  RtfDocument	implements 	IRtfDocument
 	/*--------------------------------------------------------------------------------------------------------------
 	
 	    NAME
+	        get_document_start - Returns the offset of an Rtf document start
+	
+	    PROTOTYPE
+	        $offset			=  $document -> get_document_start ( $document ) ;
+	
+	    DESCRIPTION
+	        We could say that an Rtf document contains a header part and a body part. The header part contains things
+		that are common to the whole document, such as font tables, color tables, style sheets, etc.
+		Since several sections in a Rtf header are optional, but must be specified in a certain order, this method
+		tries to locate the position of the last optional section available in the document header.
+		If none found (which should not be the case, the first section start (\sectd) is searched, then, as last
+		resort, the first paragraph start (\pard).
+	
+	    PARAMETERS
+	        $document (RtfDocument) -
+	                An object inheriting from the RtfDocument class.
+	
+	    RETURN VALUE
+	        The offset of the Rtf body part start.
+	
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  get_document_start ( ) 
+	   {
+		// Normally, the \*\generator tag should the last one in the header part, but since its optional, we have to take
+		// into account many optional tags that may appear before (normally, the \xmlnstbl and \info tags belong to the
+		// body part ; however, they will be considered as belonging to the header part)
+		static		$header_tags	=
+		   [
+			'\xmlnstbl'		=>  true,
+			'\info'			=>  true,
+			'\generator'		=>  true,
+			'\rsidtbl'		=>  true,
+			'\revtbl'		=>  true,
+			'\listtable'		=>  true,
+			'\latentstyles'		=>  true,
+			'\stylesheet'		=>  true,
+			'\colortbl'		=>  true,
+			'\filetbl'		=>  true,
+			'\fonttbl'		=>  true,
+		    ] ;
+
+		// Look for the first optional header tag present
+		foreach  ( $header_tags  as  $header_tag => $compound )
+		   {
+			// Tag found : locate its end and split the header/body parts
+			if  ( ( $index = $this -> strpos ( $header_tag ) )  !==  false )
+			   {
+				$end	=  $this -> to_closing_delimiter ( $index ) ;
+
+				return ( $end ) ;
+			    }
+		    }
+
+		// In debug mode, complain if we did not find the end of the header part
+		if  ( self::$DEBUG )
+			error ( new RtfException ( "End of Rtf header not found." ) ) ;
+
+		// As a last resort, try to locate either a "\sectd" or "\pard" tag
+		// This means that we failed to locate the real end of the header part, and that all formatting tags
+		// that may occur between this end and the first "\sectd" or "\pard" tags will be lost.
+		$section_start	=  $this -> strpos ( '\\sectd' ) ;
+
+		if  ( $section_start  ===  false )
+			$section_start	=  $this -> strpos ( '\\pard' ) ;
+
+		// Paranoid case
+		if  ( $section_start  ===  false )
+			error ( new RtfException ( "No section or paragraph start found in document." ) ) ;
+
+		// No tag found : arbitriraly fix that the body starts with either a \sectd or a \pard tag
+		return ( $section_start ) ;
+	    }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+
+	    NAME
+	        SaveTo 
+
+	    DESCRIPTION
+		Saves the Rtf contents to the specified file.
+
+	 *-------------------------------------------------------------------------------------------------------------*/
+	public function  SaveTo ( $filename )
+	   { return ( $this -> write ( $filename, 0 ) ) ; }
+
+
+	/*--------------------------------------------------------------------------------------------------------------
+	
+	    NAME
 	        ToClosingDelimiter - Finds the next closing delimiter in a string.
 	
 	    PROTOTYPE
@@ -662,77 +767,6 @@ abstract class  RtfDocument	implements 	IRtfDocument
 	   {
 		return ( round ( $twips / self::TWIPS_PER_CM, 2 ) ) ;
 	    }
-
-
-	/*--------------------------------------------------------------------------------------------------------------
-	
-	    NAME
-	        GetDocumentStart - Returns the offset of an Rtf document start
-	
-	    PROTOTYPE
-	        $offset			=  $document -> get_document_start ( $document ) ;
-	
-	    DESCRIPTION
-	        We could say that an Rtf document contains a header part and a body part. The header part contains things
-		that are common to the whole document, such as font tables, color tables, style sheets, etc.
-		Since several sections in a Rtf header are optional, but must be specified in a certain order, this method
-		tries to locate the position of the last optional section available in the document header.
-		If none found (which should not be the case, the first section start (\sectd) is searched, then, as last
-		resort, the first paragraph start (\pard).
-	
-	    PARAMETERS
-	        $document (RtfDocument) -
-	                An object inheriting from the RtfDocument class.
-	
-	    RETURN VALUE
-	        The offset of the Rtf body part start.
-	
-	 *-------------------------------------------------------------------------------------------------------------*/
-	public function  get_document_start ( ) 
-	   {
-		// Normally, the \*\generator tag should the last one in the header part, but since its optional, we have to take
-		// into account many optional tags that may appear before (normally, the \xmlnstbl and \info tags belong to the
-		// body part ; however, they will be considered as belonging to the header part)
-		static		$header_tags	=
-		   [
-			'\xmlnstbl'		=>  true,
-			'\info'			=>  true,
-			'\generator'		=>  true,
-			'\rsidtbl'		=>  true,
-			'\revtbl'		=>  true,
-			'\listtable'		=>  true,
-			'\latentstyles'		=>  true,
-			'\stylesheet'		=>  true,
-			'\colortbl'		=>  true,
-			'\filetbl'		=>  true,
-			'\fonttbl'		=>  true,
-		    ] ;
-
-		// Try to limit the searched string length ; for that, locating a '\sectd' or '\pard' entry definitely tells us
-		// that we are in the body part
-		$section_start	=  $this -> strpos ( '\\sectd' ) ;
-
-		if  ( $section_start  ===  false )
-			$section_start	=  $this -> strpos ( '\\pard' ) ;
-
-		// Look for the first optional header tag present
-		foreach  ( $header_tags  as  $header_tag => $compound )
-		   {
-			// Tag found : locate its end and split the header/body parts
-			if  ( ( $index = $this -> strpos ( $header_tag ) )  !==  false )
-			   {
-				$end	=  $this -> to_closing_delimiter ( $index ) ;
-
-				return ( $end ) ;
-			    }
-		    }
-
-		// No tag found : arbitriraly fix that the body starts with either a \sectd or a \pard tag
-		return ( $section_start ) ;
-	    }
-
-
-
     }
 
 
@@ -763,7 +797,7 @@ trait  RtfStringSupport
 		$this -> RtfData	=  $rtfdata ;
 		$this -> RtfDataLength	=  strlen ( $rtfdata ) ;
 		$this -> RecordSize 	=  $chunk_size ;
-		$this -> Name 		=  '(string contents)' ;
+		$this -> Name 		=  '' ;
 	    }
 
 
@@ -1166,33 +1200,6 @@ class  RtfStringDocument 	extends 	RtfDocument
 	   {
 		parent::__construct ( $rtfdata, $chunk_size ) ;
 	    }
-
-
-	/*--------------------------------------------------------------------------------------------------------------
-
-	    NAME
-		SaveTo - Generates a final document from a template, as an external file.
-
-	    PROTOTYPE
-	        $text 	=  $document -> SaveTo ( $output ) ;
-
-	    DESCRIPTION
-	        Saves the contents of the underlying document template to an external file.
-
-	    PARAMETERS
-	    	$output (string) -
-	    		Name of the file where the input Rtf data is to be written.
-
-	 *-------------------------------------------------------------------------------------------------------------*/
-	public function  SaveTo ( $filename )
-	   {
-		if  ( ! ( $fp = fopen ( $filename, "w" ) ) )
-			error ( new RtfException ( "Could not open file \"$filename\" for writing." ) ) ;
-
-		fwrite ( $fp, $this -> AsString ( ) ) ;
-
-		fclose ( $fp ) ;
-	    }
     }
 
 
@@ -1207,35 +1214,8 @@ class  RtfStringDocument 	extends 	RtfDocument
    {
     	use 	RtfFileSupport ;
 
-    	public function  __construct ( $file, $record_size = 16384 )
+    	public function  __construct ( $file, $record_size = 16384, $cache_size = 8 )
     	   {
-    		parent::__construct ( $file, $record_size ) ;
+    		parent::__construct ( $file, $record_size, $cache_size ) ;
     	    }
-
-
-	/*--------------------------------------------------------------------------------------------------------------
-
-	    NAME
-		SaveTo - Generates a final document from a template, as an external file.
-
-	    PROTOTYPE
-	        $text 	=  $document -> SaveTo ( $output ) ;
-
-	    DESCRIPTION
-	        Saves the contents of the underlying document template to an external file.
-
-	    PARAMETERS
-	    	$output (string) -
-	    		Name of the file where the input Rtf data is to be written.
-
-	 *-------------------------------------------------------------------------------------------------------------*/
-	public function  SaveTo ( $filename )
-	   {
-		if  ( ! ( $fp = fopen ( $filename, "w" ) ) )
-			error ( new RtfException ( "Could not open file \"$filename\" for writing." ) ) ;
-
-		$this -> SearchableFile -> Write ( $fp, 0 ) ;
-
-		fclose ( $fp ) ;
-	    }
     }
