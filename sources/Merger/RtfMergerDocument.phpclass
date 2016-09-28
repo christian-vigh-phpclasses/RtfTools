@@ -588,7 +588,7 @@ class  RtfMergerDocument		// extends  Object
 		$tags		=  $this -> TagsToRenumber ;
 
 		if  ( 0&&$remove_rsid )
-			$tags	.=  '| (rsid) | (insrsid) | (delrsid) | (charrsid) | (sectrsid) | (pararsid) | (tblrsid)' ;
+			$tags	.=  '| (insrsid) | (delrsid) | (charrsid) | (sectrsid) | (pararsid) | (tblrsid) | (rsid)' ;
 
 		if  ( $renumber_shapes )
 			$tags	.=  '| (shplid)' ;
