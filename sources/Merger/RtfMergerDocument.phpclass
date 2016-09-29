@@ -17,6 +17,13 @@
     [Version : 1.0]	[Date : 2016-09-15]     [Author : CV]
 	Initial version.
 
+    [Version : 1.0.1]	[Date : 2016-09-29]     [Author : CV]
+	. Rsid tags were not removed
+	. The following rsid tags did not belong to the list of rsid tags to be removed : styrsid and
+	  rsidroot.
+	. The space after an rsid tag is usually a regular space which belongs to the plain text of the
+	  document. It was undully removed, thus causing non-adjacent characters to become adjacent.
+
  **************************************************************************************************************/
 
 class  RtfMergerDocument		// extends  Object 
@@ -99,7 +106,7 @@ class  RtfMergerDocument		// extends  Object
 	protected	$LocalSettings			=  [] ;
 
 	// Tags whose parameter needs to be renumbered
-	protected	$TagsToRenumber			=  '(cb) | (cf) | (f) | (af) | (ls) | (cs) | (ds) | (ts) | (sbasedon) | (snext) | (slink)' ;
+	protected	$TagsToRenumber			=  '(cb) | (cf) | (f) | (af) | (s) | (ls) | (cs) | (ds) | (ts) | (sbasedon) | (snext) | (slink)' ;
 
 
 	/*--------------------------------------------------------------------------------------------------------------
@@ -587,8 +594,8 @@ class  RtfMergerDocument		// extends  Object
 	   {
 		$tags		=  $this -> TagsToRenumber ;
 
-		if  ( 0&&$remove_rsid )
-			$tags	.=  '| (insrsid) | (delrsid) | (charrsid) | (sectrsid) | (pararsid) | (tblrsid) | (rsid)' ;
+		if  ( $remove_rsid )
+			$tags	.=  '| (insrsid) | (delrsid) | (charrsid) | (sectrsid) | (pararsid) | (tblrsid) | (styrsid) | (rsidroot) | (rsid)' ;
 
 		if  ( $renumber_shapes )
 			$tags	.=  '| (shplid)' ;
@@ -597,6 +604,7 @@ class  RtfMergerDocument		// extends  Object
 					\\\\
 					(?P<tag> ' . $tags . ')
 					(?P<param> \d+) 
+					(?P<space> [ ]?)
 				    /msx' ;
 
 		$text		=  preg_replace_callback ( $regex, [ $this, '__renumbering_callback' ], $text ) ;
@@ -613,6 +621,7 @@ class  RtfMergerDocument		// extends  Object
 	   {
 		$tag		=  $matches [ 'tag' ] ;
 		$id		=  $matches [ 'param' ] ;
+		$space		=  $matches [ 'space' ] ;
 		$new_id		=  $id ;
 
 		switch  ( $matches [ 'tag' ] ) 
@@ -665,11 +674,13 @@ class  RtfMergerDocument		// extends  Object
 			case	'sectrsid' :
 			case	'pararsid' :
 			case	'tblrsid' :
-				return ( '' ) ;
+			case	'styrsid' :
+			case	'rsidroot' :
+				return ( $space ) ;
 		    }
 
 		// Return renumbered tag
-		return ( "\\$tag$new_id" ) ;
+		return ( "\\$tag$new_id$space" ) ;
 	    }
 
 
@@ -683,7 +694,7 @@ class  RtfMergerDocument		// extends  Object
 	   {
 		foreach  ( $this -> GlobalHeader -> StylesheetTable  as  $key =>  &$def )
 		   {
-			$def [ 'def' ]	 =  $this -> ReplaceReferences ( $def [ 'def' ] ) ;
+			$def [ 'def' ]	 =  $this -> ReplaceReferences ( $def [ 'def' ], true ) ;
 		    }
 	    }
 
