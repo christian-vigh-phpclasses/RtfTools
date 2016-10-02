@@ -20,6 +20,11 @@
     [Version : 1.0.2]   [Date : 2016/09/21]     [Author : CV]
 	. The SaveTo() method was calling the non-existing AsText() method instead of AsString().
 
+    [Version : 1.0.3]   [Date : 2016/09/30]     [Author : CV]
+	. Removed the useless Reset() method.
+	. The $Eol property was never set to a correct value.
+	. Removed the useless $record_size parameter from the TextifyData() method.
+
  **************************************************************************************************************/
 
 require_once ( dirname ( __FILE__ ) . '/RtfDocument.phpclass' ) ;
@@ -48,17 +53,12 @@ abstract class	RtfTexter	extends		RtfParser
 	const	TEXTEROPT_EOL_STYLE_MASK		=  0x00000030 ;		// Mask used to isolate EOL style  bits
 	const	TEXTEROPT_ALL				=  0xFFFFFFFF ;		// Enable all of the above options
 
-	// End of line style for text output
-	const 	EOL_STYLE_DEFAULT 			=  0 ;			// Default - use PHP_EOL
-	const 	EOL_STYLE_WINDOWS 			=  1 ;			// Use crlf line endings
-	const 	EOL_STYLE_UNIX 				=  2 ;			// Use Unix-style line endings (newlines)
-
 	// Configuration variables
 	protected	$Options ;						// Output text formatting options
 	public 		$PageWidth ;						// Page width to be used if the TEXTEROPT_WRAP_TEXT option is enabled
 
 	// EOL string
-	protected	$Eol ;
+	protected	$Eol				=  PHP_EOL ;
 
 	// All the keywords listed below can be safely ignored (and skipped) while processing Rtf contents
 	protected static	$IgnoreList 	=
@@ -263,15 +263,15 @@ abstract class	RtfTexter	extends		RtfParser
 
 		switch  ( $options & self::TEXTEROPT_EOL_STYLE_MASK )
 		   {
-		   	case 	self::EOL_STYLE_UNIX :
+			case 	self::TEXTEROPT_EOL_STYLE_UNIX :
 		   		$this -> Eol 	=  "\n" ;
 		   		break ;
 
-		   	case 	self::EOL_STYLE_WINDOWS :
-		   		$$this -> Eol 	=  "\r\n" ;
+			case 	self::TEXTEROPT_EOL_STYLE_WINDOWS :
+		   		$this -> Eol 	=  "\r\n" ;
 		   		break ;
 
-		   	case 	self::EOL_STYLE_DEFAULT :
+			case 	self::TEXTEROPT_EOL_STYLE_DEFAULT :
 		   	default :
 		   		$this -> Eol 	=  PHP_EOL ;
 		   }
@@ -294,9 +294,7 @@ abstract class	RtfTexter	extends		RtfParser
 	   {
 	   	$text 		=  '' ;
 
-		$this -> Reset ( ) ;
-
-	   	$this -> TextifyData ( $this -> RecordSize, $text ) ;
+	   	$this -> TextifyData ( $text ) ;
 
 	   	return ( $text ) ;
 	    }
@@ -323,33 +321,8 @@ abstract class	RtfTexter	extends		RtfParser
 	   	if  ( ! ( $fp = fopen ( $filename, "w" ) ) )
 	   		error ( new RtfException ( "Could not open file \"$filename\" for writing." ) ) ;
 
-		$this -> Reset ( ) ;
 		fwrite ( $fp, $this -> AsString ( ) ) ;
 	   	fclose ( $fp ) ;
-	    }
-
-
-	/*--------------------------------------------------------------------------------------------------------------
-	
-	    NAME
-	        Reset - Resets the texter.
-	
-	    PROTOTYPE
-	        $texter -> Reset ( ) ;
-	
-	    DESCRIPTION
-	        Resets the texter object so that a new parsing can be performed on the same file.
-	
-	 *-------------------------------------------------------------------------------------------------------------*/
-	public function  Reset ( )
-	   {
-		parent::Reset ( ) ;
-
-		// Ignore tags such as the font table (\fonttbl), stylesheets (\stylesheet) and so on
-		$this -> IgnoreCompounds ( self::$IgnoreList ) ;
-
-		// Track some control words
-		$this -> TrackControlWord ( 'uc', true, 1 ) ;		// \uc gives the width of Unicode character specifications appearing after it
 	    }
 
 
@@ -359,16 +332,12 @@ abstract class	RtfTexter	extends		RtfParser
 	        TextifyData - Performs the real text extraction process.
 	
 	    PROTOTYPE
-	        $this -> TextifyData ( $record_size, &$data, $nesting_level_to_reach = false ) ;
+	        $this -> TextifyData ( &$data, $nesting_level_to_reach = false ) ;
 	
 	    DESCRIPTION
-	        Performs the real text extraction process, using the $callback function to collect character data by
-		chunks of $record_size records.
+	        Performs the real text extraction process.
 	
 	    PARAMETERS
-	        $record_size (integer) -
-	                Specifies how many bytes should be written back at once using the $callback parameter function.
-
 		$data (string) -
 			Output string.
 	
@@ -380,11 +349,10 @@ abstract class	RtfTexter	extends		RtfParser
 			nested braces level).
 	
 	 *-------------------------------------------------------------------------------------------------------------*/
-	protected function  TextifyData ( $record_size, &$data, $nesting_level_to_reach = false )
+	protected function  TextifyData ( &$data, $nesting_level_to_reach = false )
 	   {
 		// Output data
 		$data 				=  '' ;
-		$data_length 			=  0 ;
 
 		// Page headers and footers, if any
 		$page_header 			=  '' ;
@@ -460,7 +428,7 @@ abstract class	RtfTexter	extends		RtfParser
 						//	collect the contents.
 			   		   	case 	'headerr' :
 			   		   		$page_header	 =  '' ;
-			   		   		$this -> TextifyData ( $record_size, $page_header, $this -> NestingLevel - 1 ) ;
+			   		   		$this -> TextifyData ( $page_header, $this -> NestingLevel - 1 ) ;
 		   		   			$page_header 	.= $this -> Eol ;
 		   		   			$page_header 	 = utf8_encode ( $page_header ) ;
 			   		   		break ;
@@ -469,7 +437,7 @@ abstract class	RtfTexter	extends		RtfParser
 						//	Same, for footers.
 			   		   	case 	'footerr' :
 			   		   		$page_footer	 =  '' ;
-			   		   		$this -> TextifyData ( $record_size, $page_footer, $this -> NestingLevel - 1 ) ;
+			   		   		$this -> TextifyData ( $page_footer, $this -> NestingLevel - 1 ) ;
 		   		   			$page_footer 	.=  $this -> Eol ;
 		   		   			$page_footer 	 =  utf8_encode ( $page_footer ) ;
 			   		   		break ;

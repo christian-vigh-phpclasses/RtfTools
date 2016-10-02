@@ -24,6 +24,9 @@
 	. The space after an rsid tag is usually a regular space which belongs to the plain text of the
 	  document. It was undully removed, thus causing non-adjacent characters to become adjacent.
 
+    [Version : 1.0.2]	[Date : 2016-09-30]     [Author : CV]
+	. Changed the visibility of the $Document property from protected to public.
+
  **************************************************************************************************************/
 
 class  RtfMergerDocument		// extends  Object 
@@ -45,7 +48,7 @@ class  RtfMergerDocument		// extends  Object
 	// Parent RtfMerger object
 	protected	$Parent ;
 	// Encapsulated document, inheriting from the RtfDocument class
-	protected	$Document ;
+	public		$Document ;
 	// Global header (handled by the rtf merger class)
 	protected	$GlobalHeader ;
 	// Offset to the document body

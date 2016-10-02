@@ -1,0 +1,4038 @@
+
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+	<title>RtfTools - A set of tools written in pure PHP to process Rtf files</title>
+
+	<link type="text/css" rel="stylesheet" href="help.css"/>
+
+	<meta http-equiv="charset"	content="ISO-8859-1" />
+
+	<meta name="author"		content="Christian Vigh" />
+	<meta name="copyright"		content="Christian Vigh, 2016" />
+	<meta name="robots"		content="all" />
+	<meta name="publisher"		content="Christian Vigh" />
+	<meta name="description"	content="A set of tools written in pure PHP to process Rtf files" />
+	<meta name="keywords"		content="Christian Vigh,Rtf Tools,Rtf Beautifier,Rtf Texter,Rtf To Text,Rtf Templater, Rtf Merger" />
+	
+	<script language='javascript' src='//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js'></script>
+	<script language='javascript' src='//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js'></script>
+</head>
+
+
+<body>
+	<div class="page site-border">
+		<table cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="contents">
+<script type="text/javascript">
+$(document). ready
+   (
+	function ( )
+	   {
+		$('.collapsable'). each
+		   (
+			function  ( index, collapsable_div )
+			   {
+				var	header		=  $(':first', collapsable_div) ;
+				var	contents	=  $( '.collapsable-contents', collapsable_div ) ;
+				var	id		=  header. attr ( 'id' ) ;
+				var	contents_id	=  id + '-contents' ;
+				var	header_html	=  header. html ( ) ;
+
+				if  ( ! /[hH]\d+/. test ( header. prop ( 'tagName' ) ) )
+					return ;
+
+				var	collapse_div_html	=  '<div class="collapse-button" id="' + contents_id + '-start" data-contents="' + 
+									contents_id + '"><img src="images/tree-collapse.png"/>&nbsp;&nbsp;' ;
+
+				header. html ( collapse_div_html + header_html + '</div>') ;
+				contents. attr ( 'id', contents_id ) ;
+				
+				var	collapse_end_div_html	=  '<table cellpadding="0" cellspacing="0" style="vertical-align: middle; margin-bottom: 12px"' +
+									'class="collapse-button-end" id="' + contents_id + '-end" ' +
+									'data-contents="' + contents_id + '">' +
+								   '<tr>' +
+									'<td style="padding-top: 3px"><img "images/tree-collapse.png"/></td>' +
+									'<td style="white-space: nowrap; vertical-align: top; color: #0000FF">&nbsp;Close topic <i>"' + header_html + '"</i>&nbsp;</td>' +
+									'<td style="width: 100%; padding-top: 14px"><hr/>' +
+								   '</tr>' +
+								   '</table>' ;
+
+
+				contents. append ( collapse_end_div_html ) ;
+			    }
+		    ) ;
+
+		$('.collapse-button, .collapse-button-end'). click
+		   (
+			function ( e ) 
+			   {
+				var	$this			=  $(this) ;
+				var	related_id		=  $this. data ( 'contents' ) ;
+				var	related_contents	=  $('#' + related_id ) ;
+
+				if  ( related_contents. css ( 'display' )  ==  'none' )
+				   {
+					related_contents. css ( 'display', 'block' ) ;
+					$('#' + related_id + '-start img'). attr ( 'src', '/images/tree-collapse.png' ) ;
+					$('#' + related_id + '-end img'). attr ( 'src', '/images/tree-collapse.png' ) ;
+				    }
+				else
+				   {
+					related_contents. css ( 'display', 'none' ) ;
+					$('#' + related_id + '-start img'). attr ( 'src', '/images/tree-expand.png' ) ;
+					$('#' + related_id + '-end img'). attr ( 'src', '/images/tree-expand.png' ) ;
+				    }
+			    }
+		    ) ;
+
+		$('.collapse-button'). click ( ) ;
+
+		$('a'). click
+		   (
+			function ( )
+			   {
+				var	$this		=  $(this) ;
+				var	target_link	=  $this. attr ( 'href' ) ;
+
+				if  ( target_link. charAt ( 0 )  !=  '#' )
+					return ;
+
+				var	$target		=  $ ( target_link ) ;
+
+				while  ( $target  &&  $target. prop ( 'tagName' ). toLowerCase ( )  !=  'h2' )
+				   {
+					if  ( $target. attr ( 'class' )  ==  'collapsable-contents' )
+						$target		=  $target. prev ( ) ;
+					else
+						$target		=  $target. parent ( ) ;
+				    }
+
+				if  ( $target )
+				   {
+					var	$collapsable_contents	=  $target. next ( ) ;
+					var	$top_object		=  $collapsable_contents. prev ( ) ;
+					var	related_id		=  $top_object. attr ( 'id' ) ;
+
+					$collapsable_contents. css ( 'display', 'block' ) ;
+
+					$('#' + related_id + '-contents-start img'). attr ( 'src', '/images/tree-collapse.png' ) ;
+					$('#' + related_id + '-contents-end img'). attr ( 'src', '/images/tree-collapse.png' ) ;
+				    }
+				
+			    }
+		    ) ;
+	    }
+    ) ;
+</script>
+
+<div class="documentation">
+
+<h1 id="introduction">Introduction</h1>
+<hr />
+<div class="h1">	
+	<p>
+		The <span class="highlight">RtfTools</span> package is a set of free PHP classes that operate on files containing Microsoft Rich Text Format data (*.rtf).
+	</p>
+	<p>
+		Each class has been designed to accomplish a specific task that may be useful if you have to process Rtf files in various ways : 
+	</p>
+
+	<div class="item-list">
+		<ul>
+			<li>
+				<a href="#reference-rtfmerger">RtfMerger</a> : merges several Rtf documents together and generates a single output document in Rtf format.
+			</li>
+			<li>
+				<a href="#reference-rtftemplater">RtfTemplater</a> : processes Rtf documents that use a templating language to generate a customized 
+				output Rtf document.<br />
+				The templating language supports variables expansions, expressions evaluations, IF/ELSE constructs and FOR loops.<br />
+				The RtfTemplater class can also be used when merging multiple documents together, allowing to generate customized
+				mails to be used for mass printing.
+			</li>
+			<li>
+				<a href="#reference-rtftexter">RtfTexter</a> : extracts text from Rtf documents, mainly for indexing purposes, with some basic
+				formatting capabilities.
+			</li>
+			<li>
+				<a href="#reference-rtfparser">RtfParser</a> : a generic Rtf parser that can be used if you need more advanced capabilities 
+				when interpreting Rtf document contents.
+			</li>
+			<li>
+				<a href="#reference-rtfbeautifier">RtfBeautifier</a> : a pretty-printer that reformats Rtf contents in a human-readable way, so
+				that you will be able to easily compare the contents of two Rtf files by using the Unix <i>diff</i> or Windows <i>windiff</i> tools.
+			</li>
+		</ul>
+	</div>
+
+	<p>
+		All the classes in the <span class="highlight">RtfTools</span> package have been designed to be able to process Rtf documents that may be larger than the available
+		memory. This is especially useful when you need to handle at once several Rtf documents whose total size may exceed your current PHP memory limit.
+	</p>
+
+	<p>
+		However, you always have the choice of using a version that relies on an underlying file (allowing for processing files bigger that the available memory), 
+		or its twin version that operates on Rtf contents stored as a string into memory (allowing for faster processing).
+	</p>
+
+	<p>
+		For example, the <span class="highlight">RtfTemplater</span> class is simply an abstract class which has two derived classes : 
+	</p>
+
+	<div class="item-list">
+		<ul>
+			<li>
+				<span class="highlight">RtfStringTemplater</span>, which first loads the contents of an Rtf document into memory before processing the 
+				macro-language constructs that it contains
+			</li>
+			<li>
+				<span class="highlight">RtfFileTemplater</span>, which loads the contents of an Rtf document by blocks (blocks have a default size of 16 kilobytes)
+				while processing on-the-fly the macro-language constructs that the document contains.
+			</li>
+		</ul>
+	</div>
+
+	<p>
+		The same dichotomy exists with all the other classes, at the exception of <span class="highlight">RtfMerger</span>.
+	</p>
+
+	<p>
+		The <a href="#overview">Overview of the RtfTools classes</a> section provides more information about the hierarchy of the <span class="highlight">RtfTools</span> classes,
+		especially regarding when to use the derived classes that operate on string contents and the ones that operate directly on files.
+	</p>
+
+	<p>
+		You will also find an <a href="#examples">Examples</a> section, that gives a general overview on how to use the classes. If you would like examples that sound a little bit more
+		like real life, using real sample Rtf files, you can also have a look at the <i>examples</i> directory in the .zip file containing the latest release of the
+		distribution (which can be downloaded here : <a href="/download.php?version=latest">http://www.rtftools.net/download.php?version=latest</a>)
+	</p>
+
+	<p>
+		Finally, the <a href="#reference">Reference</a> section gives a complete description of the <span class="highlight">RtfTools</span> classes, their properties and their methods.
+	</p>
+</div>
+
+	<h2 id="introduction-license">Licensing</h2>
+	<div class="h2">	
+		<p>
+			The applicable licensing scheme for using this package is
+			<a href="https://www.gnu.org/licenses/gpl-3.0.txt" target="_blank">GPL V3</a>.
+		</p>
+	</div>
+
+	<h2 id="introduction-prerequisites">Prerequisites</h2>
+	<div class="h2">	
+		<p>
+			This package requires PHP >= 5.6.
+		</p>
+	</div>
+
+	<h2 id="introduction-installation">Installation</h2>
+	<div class="h2">	
+		<p>
+			There is no particular installation process. Just extract the files located in the <i>sources</i> directory of the .ZIP archive to your preferred include
+			directory location. You can also extract the whole archive if you like.
+		</p>
+	</div>
+
+<h1 id="overview">Overview of the RtfTools classes</h1>
+<hr />
+<div class="h1">	
+	<p>
+		This section will give you an overview of how the classes in the <span class="highlight">RtfTools</span> package are organized and why they were organized this way.
+	</p>
+
+	<p>
+		You will discover that most classes come in two versions : a string-based version which operates on a whole Rtf document directly loaded into memory, and a file-based version
+		that loads chunks of data from an Rtf document.<br />
+		Both versions provide exacty the same functionalities, but they differ in terms of memory and cpu usage ; their constructors, of course are also different, since they do not
+		require the same parameters.
+	</p>
+
+	<p>
+		Finally, you will find a small discussion about when to chose the string-based version and when to chose the file-based version.<br />
+	</p>
+</div>
+
+	<h2 id="overview-requirements">Design requirements</h2>
+	<div class="h2">
+		<p>
+			Classes of this package have been designed with the following requirements in mind :	
+		</p>
+
+		<div class="item-list">
+			<ol>
+				<li>
+					They should be able to process Rtf documents bigger than the available memory. This has been achieved by using the 
+					<span class="highlight">SearchableFile</span> class, available in this package.
+				</li>
+				<li>
+					The Rtf classes should be more or less accessible as strings and provide the <span class="highlight">ArrayAccess</span>,
+					<span class="highlight">Countable</span> and <span class="highlight">Iterator</span> interfaces.<br />
+					Additionnaly, they also provide string-oriented functions that have a native PHP equivalent, such as <i>substr</i>, 
+					<i>strpos</i>, etc.
+				</li>
+				<li>
+					Rtf documents should be processed either from a string or from a file.
+					<p>
+						Of course, it would have been ideal to have a single class that is able to handle both cases, providing them 
+						with a stream wrapper either for strings or files contents. But this would have been in contradiction with requirement <b>(2)</b>,
+						which aimed at providing a string-like interface for both string- and file-based versions.
+					</p>
+					<p>
+						Another more or less ideal approach would have been to use multiple inheritance, but PHP definitively lacks of support for that.
+					</p>
+					<p>
+						Given these requirements and technical constraints, the final choice has been ported on using traits.
+					</p>
+				</li>
+				<li>
+					The file-based version should not have too much overhead when compared to the string-based version of the same class : here again,
+					the <span class="highlight">SearchableFile</span> class is of great help, since it implements some kind of buffer cache,
+					which holds in memory the most recent blocks that have been read so far.<br />
+					Actually, most systems I've tested show a 2- to 4-times performance difference (ie, file-based versions as 2 to 4 times slower
+					than their string-based counterpart). However, I have seen a desktop PC which had a very good I/O subsystem ; on this platform,
+					the performances where quite similar.
+				</li>
+			</ol>
+		</div>
+	</div>
+
+	<h2 id="overview-hierarchy">Introduction to the RtfTools class hierarchy</h2>
+	<div class="h2">	
+		<p>
+			Maybe the easiest way to understand how the classes of the <span class="highlight">RtfTools</span> package are organized is to start from the root, 
+			the <a href="#reference-rtfdocument">RtfDocument</a> class ; the diagram below, which uses a home-made formalism, describes the origin of it all :
+		</p>
+		<br />
+		<center>
+			<a href="/images/Modeling - RtfDocument.png" target="_blank"
+				><img src="/images/Modeling - RtfDocument.png" title="Overview of the RtfDocument class hierarchy" width="325" height="390"/></a>
+		</center>
+	</div>
+	<br />
+
+		<h3 id="overview-hierarchy-diagram">Diagram explanations</h3>
+		<div class="h3">	
+			<p>
+				The diagram above needs a few explanations :
+			</p>
+
+			<div class="item-list">
+				<ul>
+					<li>
+						The gray shapes represent entities that cannot be directly instantiated as objects : interfaces, abstract classes and traits
+					</li>
+					<li>
+						The yellow shapes represent entities that can be instantiated (classes).
+					</li>
+					<li>
+						Each line between two shapes represent a relationship, with a direction ; they all have a label that explains the kind of relationship.<br />
+						For example, the line labelled <i>implements</i> between the <span class="highlight">IRtfDocument</span> and <span class="highlight">RtfDocument</span> 
+						shapes mean : "The RtfDocument class implements the IRtfDocument interface".<br />
+						Similarly, the line labelled <i>uses</i> between the <span class="highlight">RtfFileDocument</span> class and the 
+						<span class="highlight">RtfFileSupport</span> trait means : "The RtfFileDocument class uses the RtfFileSupport trait". 
+						The <i>has member</i> line shows that the <span class="highlight">RtfFileSupport</span> class has a member of type
+						<span class="highlight">SearchableFile</span>, which is used to operate on the underlying Rtf document.
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<h3 id="overview-hierarchy-rtfdocument">The RtfDocument class hierarchy</h3>
+		<div class="h3">	
+			<p>
+				Of course, the diagram above was not only an example ; it describes the various components that are articulated around the base abstract class, 
+				<span class="highlight">RtfDocument</span>.
+			</p>
+			<p>
+				This diagram shows that the <span class="highlight">RtfDocument</span> class implements the <span class="highlight">IRtfDocument</span> interface. This is 
+				not completely true, in reality : the actual implementation of the <span class="highlight">IRtfDocument</span> interface has been delegated into the two traits,
+				<span class="highlight">RtfStringSupport</span> and <span class="highlight">RtfFileSupport</span>.
+			</p>
+			<p>
+				But here comes the dichotomy : at the next abstraction level, the <span class="highlight">RtfDocument</span> class splits into two final versions :
+				<span class="highlight">RtfStringDocument</span> and <span class="highlight">RtfFileDocument</span>. The first one will load the contents of an Rtf
+				document <b>entirely</b> into memory, while the second one will read the document contents from disk, only when they are needed.<br />
+			</p>
+			<p>
+				The first approach is focused on performance, while the second one is focused on reducing memory usage.
+			</p>
+		</div>
+
+		<h3 id="overview-hierarchy-rtfdocument-derived">Classes derived from RtfDocument</h3>
+		<div class="h3">
+			<p>
+				Based on this modeling approach, most of the specialized classes of the <span class="highlight">RtfTools</span> package roughly follow the same scheme. An
+				example is given below for the <span class="highlight">RtfTemplater</span> class :
+			</p>	
+			<br />
+			<center>
+				<a href="/images/Modeling - RtfTemplater.png" target="_blank"
+					><img src="/images/Modeling - RtfTemplater.png" title="Overview of the RtfDocument class hierarchy" width="325" height="295"/></a>
+			</center>
+			
+			<p>
+				The above diagram shows that the <span class="highlight">RtfTemplater</span> class inherits from the <span class="highlight">RtfDocument</span> one ; as its parent,
+				this is an abstract class that later specializes in two classes, <span class="highlight">RtfStringTemplater</span> and <span class="highlight">RtfFileTemplater</span>.
+			</p>
+
+			<p>
+				At the exception of the <span class="highlight">RtfMerger</span> class, all other classes inherit more or less directly from <span class="highlight">RtfDocument</span>.
+			</p>
+		</div>
+
+	<h2 id="overview-discussion">String-based <i>vs</i> file-based classes</h2>
+	<div class="h2">	
+		<p>
+			Now that we have understood the dichotomy between the string-based and file-based classes, there is one big question that may come up to your mind : 
+			<i>"Why do I have to chose between a string-based version and a file-based one ?"</i>. Here are a few hints, which are not to be taken as truths :
+		</p>
+
+		<p>
+			Chose the string-based version of an <span class="highlight">RtfDocument</span> class when :
+		</p>
+
+		<div class="item-lit">
+			<ul>
+				<li>
+					You know that your memory limit will never be reached by the files you have to process
+				</li>
+				<li>
+					You want higher performance
+				</li>
+			</ul>
+		</div>
+
+		<p>
+			Conversely, chose the file-based version when :
+		</p>
+
+		<div class="item-lit">
+			<ul>
+				<li>
+					You know that some of the files you have to process may exhaust your available memory due to their size
+				</li>
+				<li>
+					You are not that much concerned with performance ; this is the case for example of batch scripts
+				</li>
+			</ul>
+		</div>
+
+		<p>
+			Whatever the solution you chosed, please keep in mind that the API will remain exactly the same, whether you chose the string-based version
+			of a class or its file-based counterpart.
+		</p>
+	</div>
+	<br />
+
+<h1 id="examples">Examples</h1>
+<hr />
+<div class="h1">
+	<p>
+		You will find below a few examples on how to use the various classes from the <span class="highlight">RtfTools</span> package. 
+	</p>
+	<p>
+		You will also find running examples in the <span class="highlight">examples</span> directory of the .ZIP archive containing the <span class="highlight">RtfTools</span> package.
+	</p>
+</div>
+
+	<h2 id="examples-templater">Processing a template Rtf document</h2>
+	<div class="h2">	
+	</div>
+
+	<h2 id="examples-merger">Merging multiple Rtf documents together</h2>
+	<div class="h2">
+		<p>
+			Merging Rtf files is fairly simple ; first, create a instance of the **RtfMerger** class ; you can supply a list of files to be merged together, 
+			or add them later by calling the *Add()* method :
+		</p>
+		<div class="code">
+include ( 'path/to/RtfMerger.phpclass' ) ;
+
+$merger 	=  new RtfMerger ( 'sample1.rtf', 'sample2.rtf' ) ;
+$merger -> Add ( 'sample3.rtf' ) ;
+		</div>
+		<p>
+			The above example specified the names of the files to be merged ; but you can also give objects inheriting from the 
+			<a href="#reference-rtfdocument">RtfDocument</a> class, such as in the example below :
+		</p>
+		<div class="code">
+$merger 	=  new RtfMerger ( ) ;
+$merger -> Add ( new RtfFileDocument ( 'sample3.rtf' ) ) ;
+$merger -> Add ( new RtfStringDocument ( file_get_contents ( 'sample4.rtf' ) ) ) ;
+
+$template_variables 	=  [ 'a' => 'this is variable A', 'b' => 'this is variable b' ] ;
+$merger -> Add ( new RtfFileTemplater ( 'sample5.rtf', $template_variables ) ;	
+		</div>
+		<p>
+			<i>Related class</i> : <a href="#reference-rtfmerger">RtfMerger</a>
+		</p>	
+	</div>
+
+	<h2 id="examples-texter">Extracting text from an Rtf document</h2>
+	<div class="h2">
+		<p>
+			Extracting text from an Rtf document is easy ; the following example extracts plain text contents from files <i>"sample1.rtf"</i> and <i>"sample2.rtf"</i>, and 
+			puts them in files <i>"sample1.txt"</i> and <i>"sample2.txt"</i>, respectively. The plain text contents of file <i>"sample2.rtf"</i> are echoed on the standard output :
+		</p>	
+		<div class="code">
+include ( 'path/to/RtfTexter.phpclass' ) ;
+
+// Use the string-based version of the class for the first file
+$contents	=  file_get_contents ( 'sample1.rtf' ) ;
+$doc		=  new RtfStringTexter ( $contents ) ;
+$doc -> SaveTo ( 'sample1.txt' ) ;
+
+// Use the file-based version of the class for the second file
+$doc		=  new RtfFileTexter ( 'sample2.rtf' ) ;
+echo $doc -> AsString ( ) ;
+$doc -> SaveTo ( 'sample2.txt' ) ;
+		</div>
+		<p>
+			<i>Related class</i> : <a href="#reference-rtftexter">RtfTexter</a>
+		</p>	
+	</div>
+
+	<h2 id="examples-beautifier">Pretty-printing Rtf document contents</h2>
+	<div class="h2">
+		<p>
+			The following example will process two files, <i>sample1.rtf</i> and <i>sample2.rtf</i>, and will generates their pretty-printed output to files
+			<i>sample1.txt</i> and <i>sample2.txt</i>, respectively :
+		</p>
+		<div class="code">
+include ( 'path/to/RtfBeautifier.phpclass' ) ;
+
+// Use the string-based version of the class for the first file
+$contents	=  file_get_contents ( 'sample1.rtf' ) ;
+$doc		=  new RtfStringBeautifier ( $contents ) ;
+$doc -> SaveTo ( 'sample1.txt' ) ;
+
+// Use the file-based version of the class for the second file
+$doc		=  new RtfFileBeautifier ( 'sample2.rtf' ) ;
+$doc -> SaveTo ( 'sample2.txt' ) ;
+		</div>
+		<p>
+			Now, if you are running Unix, you can type the following command to compare the contents of both documents :
+		</p>
+		<div class="code">
+$ diff sample1.txt sample2.txt | more
+		</div>
+		<p>
+			On Windows systems, you can use the Windiff command, which graphically displays its comparison results :
+		</p>
+		<div class="code">
+C:\ > windiff sample1.txt sample2.txt
+		</div>
+		<p>
+			 (the windiff command can be downloaded here : <a href="http://www.grigsoft.com/download-windiff.htm" target="_blank">http://www.grigsoft.com/download-windiff.htm</a>)
+		</p>
+		<p>
+			<i>Related class</i> : <a href="#reference-rtfbeautifier">RtfBeautifier</a>
+		</p>	
+	</div>
+
+	<h2 id="examples-parser">Parsing an Rtf file</h2>
+	<div class="h2">	
+	</div>
+	<br />
+
+<h1 id="reference">Class reference</h1>
+<hr />
+<div class="h1">
+</div>
+
+	<div class="collapsable">
+	<h2 id="reference-rtfdocument">RtfDocument class</h2>
+	<div class="collapsable-contents">
+	<div class="h2">
+		<p>
+			The <span class="highlight">RtfDocument</span> class is an abstract class from which all other classes of the <span class="highlight">RtfTools</span> package
+			inherit (at the exception of <span class="highlight">RtfMerger</span>).
+		</p>
+		<p>
+			It supports the <span class="highlight">IRtfDocument</span> interface, but it does not implement the methods declared in it : this role is delegated to the 
+			<span class="highlight">RtfStringSupport</span> and <span class="highlight">RtfFileSupport</span> traits, that are later used by specialized (non-abstract)
+			classes such as <span class="highlight">RtfStringDocument</span> and <span class="highlight">RtfFileDocument</span>.
+		</p>
+		<p>
+			You may notice that there is a mix of naming conventions on method names ; Some use joined words with their first letter uppercased, some use lowercase words
+			separated with an underline.<br />
+			At the exception of the <span class="highlight">AsString</span> and <span class="highlight">SaveTo</span> methods, which were initially the only methods
+			designed for public usage, some other methods were considered to have some interest for the outside world ; this is why :
+
+			<div class="item-list">
+				<ul>
+					<li>
+						Methods with uppercased first letters in their name, such as <span class="highlight">GetCompoundTag</span>, are public static methods that can
+						operate on fragments on Rtf code
+					</li>
+					<li>
+						Methods whose name consists only in lowercase words separated by underlines where initially private, but were considered to potentially be
+						of some interest for the outside world. They operate on <i>instances</i> of <span class="highlight">RtfTools</span> classes.
+					</li>
+				</ul>
+			</div>
+		</p>
+	</div>
+	<br />
+
+		<h3 id="reference-rtfdocument-class-diagram">Class diagram</h3>
+		<div class="h3">
+			<p>
+				If you have read the <a href="#overview">Overview of the RtfTools classes</a> section, then you are already familiar with this diagram :
+			</p>
+			<br />
+			<center>
+				<a href="/images/Modeling - RtfDocument.png" target="_blank"
+					><img src="/images/Modeling - RtfDocument.png" title="Overview of the RtfDocument class hierarchy" width="325" height="390"/></a>
+			</center>
+		</div>
+		<br />
+
+		<h3 id="reference-rtfdocument-constructor">Constructor</h3>
+		<div class="h3">	
+			<p>
+				The <span class="highlight">RtfDocument</span> constructor does not accept any parameters of its own ; it simply delegates instantiation to
+				the <span class="highlight">__specialized_construct</span> method of the <span class="highlight">RtfStringSupport</span> and
+				<span class="highlight">RtfFileSupport</span> traits, passing all the arguments it received.
+			</p>
+			<p>
+				You can have a look at the <a href="#reference-stringfiletraits">String and File support traits</a> section later in this chapter for an 
+				explanation on how parent and derived class constructors intercommunicate their parameters.
+			</p>
+		</div>
+
+		<h3 id="reference-rtfdocument-methods">Methods</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtfdocument-methods-decodespecialchars">public static function  <span class="header-highlight">DecodeSpecialChars</span> ( $contents, $convert_accents = false )</h4>
+			<div class="h4">
+				<p>
+					Decodes characters using the Rtf notation <b>\'xy</b>, where <i>x</i> and <i>y</i> are hexadecimal digits, and replaces them with their Ansi counterparts.
+				</p>
+
+				<p class="reference-section">Parameters :</p>
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$contents</span> (<i>string</i>) :<br />
+							<div>
+								Rtf text to be decoded.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$convert_accents</span> (<i>boolean</i>) :<br />
+							<div>
+								When true, escape sequences representing accentuated characters will be replaced with their unaccentuated ascii equivalent.
+							</div>
+						</li>
+					</ul>
+				</div>
+
+				<p class="reference-section">Return value :</p>
+				<div class="reference-text">
+					Returns the input text, with all special characters converted.
+				</div>
+
+				<p class="reference-section">Notes :</p>
+				<div class="reference-text">
+					The following conversions apply :
+					<div class="item-list">
+						<ul>
+							<li>
+								Accentuated characters are replaced with their unaccentuated counterparts if the <i>$convert_accents</i> parameter is true.
+							</li>
+							<li>
+								All Rtf constructs specifying quotes or doublequotes are replaced with their ascii equivalent
+							</li>
+							<li>
+								Unbreakable spaces (\~) are replaced with a single space
+							</li>
+							<li>
+								Carriage returns and newlines are suppressed
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<br />
+
+			<h4 id="reference-rtfdocument-methods-escapestring">public static function  <span class="header-highlight">EscapeString</span> ( $value )</h4>
+			<div class="h4">
+				<p>
+					Some strings (designated as #PCDATA in the Rtf specifications) may contain characters that could be interpreted as Rtf instructions ; such characters are :
+					<div class="item-list">
+						<ul>
+							<li>"\", which starts the name of a tag, such as "\rtf1"</li>
+							<li>"{", which starts a nested construct</li>
+							<li>"}", which ends a nested construct</li>
+						</ul>
+					</div>
+					All these characters must be represented as "\\", "\{" and "\}", respectively
+				</p>
+
+				<p class="reference-section">Parameters :</p>
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$value</span> (<i>string</i>) :<br />
+							<div>
+								String to be escaped.
+							</div>
+						</li>
+					</ul>
+				</div>
+
+				<p class="reference-section">Return value :</p>
+				<div class="reference-text">
+					Returns the escaped value.
+				</div>
+			</div>
+			<br />
+
+			<h4 id="reference-rtfdocument-methods-getcompoundtag">public static function  <span class="header-highlight">GetCompoundTag</span> ( $data, $tag, $offset = 0, $include_tag = false )</h4>
+			<div class="h4">
+				<p>
+					Extracts a compound tag from Rtf data, handling multiple nesting levels if necessary.
+				</p>
+				<p>
+					For example, the color table present in the header part of an Rtf document has the following structure :
+				</p>
+				<div class="code"
+>{\colortbl;\red0\green0\blue0;\red0\green0\blue255;\red0\green255\blue255; 
+\red0\green255\blue0;\red255\green0\blue255;}</div>
+				<p>					
+					The <b>\colortbl</b> tag is enclosed within curly braces. The <span class="highlight">GetCompoundTag</span> method locates such a tag in the Rtf data
+					supplied by the <b>$data</b> parameter, and returns the enclosed contents, without the curly braces.
+				</p>
+
+				<p class="reference-section">Parameters :</p>
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$data</span> (<i>string</i>) :<br />
+							<div>
+								Rtf data where the tag is to be searched.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$tag</span> (<i>string</i>) :<br />
+							<div>
+								An Rtf tag, including the leading backslash, such as "\fonttbl".
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$offset</span> (<i>integer</i>) :<br />
+							<div>
+								Position in <b>$data</b> where the search should begin.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$include_tag</span> (<i>boolean</i>) :<br />
+							<div>
+								When true, the searched tag will also be included in the output result.
+							</div>
+						</li>
+					</ul>
+				</div>
+
+				<p class="reference-section">Return value :</p>
+				<div class="reference-text">
+					Returns the tag contents (including nested tags) if found, or false otherwise.
+				</div>
+			</div>
+			<br />
+
+			<h4 id="reference-rtfdocument-methods-getdocumentstart">public static function  <span class="header-highlight">get_document_start</span> ( )</h4>
+			<div class="h4">
+				<p>
+					Rtf documents contain a header part and a body part. To process a document body, we need of course to be sure where the header
+					part ends and where the body part starts.
+				</p>
+				<p>
+					Unfortunately, there is not precise point in an Rtf document that says : "this is the end of the header, and the start of the body part".
+				</p>
+				<p>
+					A header is made of several parts, such as tags that define the character set used globally in the document, as well as compound structures
+					such as font tables, color tables, style sheets and so on.<br />
+					Most of these elements are optional, which could render things a little bit tricky ; 
+					fortunately, there is a certain order to respect when specifying them. For example, the optional font table must appear, when specified,
+					before the optional color table, which in turn must appear before the stylesheet table, etc.
+				</p>
+				<p>
+					The <span class="highlight">get_document_start</span> method is able to locate the end of the very last part of a document header, which signals
+					the start of the body part.
+				</p>
+				<p>
+					If no header end has been found (which should not happen except for very ill-formed documents), then the <span class="highlight">get_document_start</span>
+					method will try to locate the first <span class="highlight">\sectd</span> (section start) or <span class="highlight">\pard</span> (reset paragraph
+					settings to their defaults).<br />
+					In such a case, you may lose formatting styles that can occur just between the end of the header and the <span class="highlight">\sectd</span> or
+					<span class="highlight">\pard</span> tags.
+				</p>
+
+				<p class="reference-section">Return value :</p>
+				<div class="reference-text">
+					Returns the byte offset, in the Rtf document, of the start of the document body.
+				</div>
+			</div>
+			<br />
+
+			<h4 id="reference-rtfdocument-methods-toclosingdelimiter">public static function  <span class="header-highlight">ToClosingDelimiter</span> ( $string, $start = 0 )</h4>
+			<div class="h4">
+				<p>
+					Suppose that you have a compound statement such as the following font table, located inside Rtf contents :
+
+					<div class="code"
+><i>(some Rtf contents)</i> 
+{\fonttbl {\f1 ... {\panose ...} Time New Roman;} {\f2 ... Arial;}} <i>
+(some other Rtf contents)</i></div>
+
+					The <span class="highlight">ToClosingDelimiter</span> method will find the last closing brace, provided that you supply the index of the
+					opening brace in the Rtf document.
+				</p>
+				<p>
+					Although the <span class="highlight">RtfStringDocument</span> and <span class="highlight">RtfFileDocument</span> classes implement a 
+					<span class="highlight">to_closing_delimiter</span> method that searches string or file contents until a closing brace has been found, 
+					it is sometimes handy to do it on a simple string. This is why there is also a generic closing delimiter search method that operates on
+					strings, whatever the underlying document implementation looks like (string-based or file-based).
+				</p>
+				<p>
+					As for its specialized counterpart, this method is able to handle nested constructs.
+				</p>
+				
+				<p class="reference-section">Parameters :</p>
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$string</span> (<i>string</i>) :<br />
+							<div>
+								A string containing Rtf data.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$start</span> (<i>integer</i>) :<br />
+							<div>
+								The start of the compound construct whose ending brace is to be located. This parameter <b>MUST</b> point to the next
+								character <b>AFTER</b> the opening brace.
+							</div>
+						</li>
+					</ul>
+				</div>
+
+				<p class="reference-section">Return value :</p>
+				<div class="reference-text">
+					Returns the byte offset of the closing brace of the compound construct starting at offset <span class="highlight">$start - 1</span>,
+					or <i>false</i> if the supplied Rtf data has imbalanced nested opening/closing braces.
+				</div>
+			</div>
+			<br />
+
+			<h4 id="reference-rtfdocument-methods-twipstocm">public static function  <span class="header-highlight">TwipsToCm</span> ( $value )</h4>
+			<div class="h4">
+				Converts a value expressed in twips (1/1440 of an inch) to centimeters.
+			</div>
+
+		<h3 id="reference-rtfdocument-properties">Properties</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtfdocument-properties-decodingtable">protected <span class="header-highlight">$DecodingTable</span></h4>
+			<div class="h4">
+				<p>
+					This table is used by the <a href="#reference-rtfdocument-methods-decodespecialchars">DecodeSpecialChars</a> method to decode 
+					special character specifications of the form : <span class="highlight">\'xy</span> (where <i>xy</i> are hexadecimal characters providing
+					an ascii code) with their ascii equivalent.
+				</p>
+				<p>
+					It also provides translations for the following characters :
+
+					<div class="item-list">
+						<ul>
+							<li>
+								Single quotes specified by the <span class="highlight">\lquote</span> or <span class="highlight">\rquote</span>,
+								or by an Ascii character greater than 127, will be replaced with their ascii equivalent (ascii 0x27)
+							</li>
+							<li>
+								Double quotes, such as English quotes or French angle brackets, will be replaced with their ascii equivalent (ascii 0x22)
+							</li>
+							<li>
+								Unbreakable spaces specified by the <span class="highlight">\~</span> tag, will be replaced by a single ascii space (0x20)
+							</li>
+							<li>
+								Carriage returns and line feeds are suppressed.
+							</li>
+						</ul>
+					</div>
+				</p>
+			</div>
+
+			<h4 id="reference-rtfdocument-properties-decodingtablewithaccents">protected <span class="header-highlight">$DecodingTableWithAccents</span></h4>
+			<div class="h4">
+				<p>
+					This table is used by the <a href="#reference-rtfdocument-methods-decodespecialchars">DecodeSpecialChars</a> method to replace accentuated characters
+					with their ascii equivalent without accents, when the <span class="highlight">$convert_accents</span> parameter is <i>true</i>.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfdocument-properties-name">public <span class="header-highlight">$Name</span></h4>
+			<div class="h4">
+				<p>
+					For file-based documents, contains the name of the supplied input Rtf document.<br />
+					For string-based documents, contains an empty string.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfdocument-properties-recordsize">protected <span class="header-highlight">$RecordSize</span></h4>
+			<div class="h4">
+				<p>
+					Contains the record size used when writing output documents.<br />
+					The default record size is 4Mb for string-based classes, and 16Kb for file-based ones.
+				</p>
+			</div>
+
+		<h3 id="reference-rtfdocument-constants">Constants</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtfdocument-constants-twipspercm"><span class="header-highlight">TWIPS_PER_CM</span></h4>
+			<div class="h4">
+				Number of twips per centimeters.
+			</div>
+
+			<h4 id="reference-rtfdocument-constants-token"><span class="header-highlight">TOKEN_* constants</span></h4>
+			<div class="h4">
+				The <span class="highlight">TOKEN_*</span> constants represent a syntactic element of an Rtf file :
+
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">TOKEN_INVALID</span> : Represents an invalid character encountered in the input stream.
+							Such a situation should never happen, however.
+						</li>
+						<li>
+							<span class="highlight">TOKEN_LBRACE</span> : An opening brace ("{"). This signals the start of a compound Rtf construct.
+						</li>
+						<li>
+							<span class="highlight">TOKEN_RBRACE</span> : A closing brace ("}") that signals the end of a compound construct.
+						</li>
+						<li>
+							<span class="highlight">TOKEN_CONTROL_WORD</span> : A control word, such as <span class="highlight">\par</span> (paragraph start). 
+							The Microsoft Rtf Specifications use the general term of <i>control word</i>. In this help document, we use the more restrictive term <i>tag</i>
+							when talking about construct that start with a backslash followed by letters.
+						</li>
+						<li>
+							<span class="highlight">TOKEN_CONTROL_SYMBOL</span> : Special kinds of control words that start with a backslash character but are
+							not followed by a sequence of letters that form a word ; this is the case for example for <span class="highlight">\~</span> 
+							(unbreakable space), <span class="highlight">\-</span> (optional hyphen), <span class="highlight">\_</span> (non-breaking hyphen), etc.
+						</li>
+						<li>
+							<span class="highlight">TOKEN_CHAR</span> : An Ansi character specification of the form <span class="highlight">\'xy</span>, where
+							<i>xy</i> represents the character code.
+						</li>
+						<li>
+							<span class="highlight">TOKEN_ESCAPED_CHAR</span> : One of the very few characters that need to be escaped when placed in plain text :
+							<span class="highlight">\{</span>, <span class="highlight">\}</span> and <span class="highlight">\\</span>.
+						</li>
+						<li>
+							<span class="highlight">TOKEN_PCDATA</span> : The term <i>PCDATA</i> has the same meaning as the one specified by Microsoft : 
+							it specifies character (plain text) data.
+						</li>
+						<li>
+							<span class="highlight">TOKEN_SDATA</span> : Hexadecimal data specified as a sequence of hexadecimal characters (0 through 9 and A through F).
+							Such a sequence can be found in picture elements (<span class="highlight">\pict</span> tags) where the text found before the last closing brace
+							represents the image data itself, encoded in hexadecimal.
+						</li>
+						<li>
+							<span class="highlight">TOKEN_BDATA</span> : Binary data that comes right after a control world. The only example I have so far is related
+							to the <span class="highlight">\bin</span> control world. 
+						</li>
+						<li>
+							<span class="highlight">TOKEN_NEWLINE</span> : Newlines are not significant in Rtf contents, they are simply ignored (in fact, the whole
+							contents of an Rtf file could be written on a single line). However, being able to make such distinction is useful for classes such as the
+							<a href="#reference-rtfbeautifier">RtfBeautifier</a> class.
+						</li>
+					</ul>
+				</div>
+
+				These constants are mainly used by the <a href="#reference-rtfparser">RtfParser</a> class, but since
+				<a href="#reference-rtftexter">RtfTexter</a> relies on <span class="highlight">RtfParser</span>, their definition
+				has been put at the <span class="highlight">RtfDocument</span> class level.
+			</div>
+
+		<h3 id="reference-irtfdocument">IRtfDocument interface</h3>
+		<div class="h3">	
+			<p>
+				The methods declared in the <span class="highlight">IRtfDocument</span> interfaces are implemented by all classes derived from the <span class="highlight">RtfDocument</span> class.<br />
+				This means that they work the same way, whether you are using a string-based or file-based class inheriting from <span class="highlight">RtfDocument</span>.
+			</p>
+			<p>
+				All classes inheriting from <span class="highlight">RtfDocument</span> (and therefore, supposed to implement the <span class="highlight">IRtfDocument</span> interface)
+				implement the <span class="highlight">ArrayAccess</span>, <span class="highlight">Countable</span> and <span class="highlight">Iterator</span> interfaces.
+			</p>
+			<p>
+				This means for example that calling the <span class="highlight">count()</span> builtin function on an object inheriting from the <span class="highlight">RtfDocument</span>
+				class will return you the number of characters present in your Rtf document :
+
+				<div class="code"
+>$doc	=  new RtfStringDocument ( 'sample.rtf' ) ;
+echo count ( $doc ) ;</div>
+
+				Note that it will return the number of characters in the Rtf code, not the number of characters of the plain text.
+			</p>
+			<p>
+				You can iterate through each character of the Rtf data present in your document by using a <b>for</b> loop :
+
+				<div class="code"
+>$doc	=  new RtfFileDocument ( 'sample.rtf' ) ;
+
+for  ( $i = 0, $count = count ( $doc ) ; $i  <  $count ; $i ++ )
+	echo "CHAR at position $i = [{$doc [$i]}]\n" ;</div>
+
+				Note that you can use array index notation to retrieve an individual character, such as in <span class="highlight">$doc [$i]</span>.
+			</p>
+			<p>
+				Similarly, you can use a <b>foreach</b> loop to iterate through individual characters :
+
+				<div class="code"
+>$doc	=  new RtfFileDocument ( 'sample.rtf' ) ;
+					
+foreach  ( $doc  as  $ch )
+   {
+	// Do something with $ch...
+    }</div>
+			</p>
+		</div>
+
+			<h4 id="reference-irtfdocument-asstring">public function  <span class="header-highlight">AsString</span> ( )</h4>
+			<div class="h4">
+				<p>
+					Returns the contents of the underlying Rtf document as a string.
+				</p>
+			</div>
+
+			<h4 id="reference-irtfdocument-saveto">public function  <span class="header-highlight">SaveTo</span> ( $filename )</h4>
+			<div class="h4">
+				<p>
+					Saves the current document to the specified file.
+				</p>
+			</div>
+
+			<h4 id="reference-irtfdocument-getcontents">public function  <span class="header-highlight">get_contents</span> ( )</h4>
+			<div class="h4">
+				<p>
+					Returns the whole contents of the underlying Rtf document, as a string.
+				</p>
+			</div>
+
+			<h4 id="reference-irtfdocument-strchr">public function  <span class="header-highlight">strchr</span> ( $cset, $start = 0 )</h4>
+			<div class="h4">
+				<p>
+					Searches for the first character in the Rtf document that is present in the <b>$cset</b> string, starting at the character position
+					specified by <b>$start</b>.
+				</p>
+				<p>
+					This function behaves like a mix between the builtin <span class="highlight">strchr()</span> and <span class="highlight">strcspn()</span> functions.<br />
+					Unlike <span class="highlight">strchr</span>, it is able to search for the first occurrence of a character belonging to a given set of characters
+					(and not only for a single character) ; but unlike the <span class="highlight">strcspn()</span> function, it will return the offset of the first
+					character found (strcspn actually returns the length of the longest segment that <i>do not</i> include any character specified by <b>$cset</b>).
+				</p>
+				<p>
+					The reason for this is that most of the classes belonging to the <span class="highlight">RtfTools</span> package need to parse Rtf contents ; most of their
+					needs consists in finding the next character having semantics in the Rtf language : backslash, opening and closing brace.
+				</p>
+				<p>
+					The method returns the offset of the found character, or <i>false</i> otherwise.
+				</p>
+			</div>
+
+			<h4 id="reference-irtfdocument-strlen">public function  <span class="header-highlight">strlen</span> ( )</h4>
+			<div class="h4">
+				<p>
+					Returns the number of characters present in the underlying Rtf document.<br />
+					The following instructions are equivalent (at least from a semantic point of view) :
+				</p>
+
+				<div class="code"
+>echo count ( $doc ) ;
+echo $doc -> strlen ( ) ;</div>
+			</div>
+
+			<h4 id="reference-irtfdocument-strpos">public function  <span class="header-highlight">strpos</span> ( $searched_string, $start = 0 )</h4>
+			<div class="h4">
+				<p>
+					Searches the underlying Rtf document for the string specified by the <b>$searched_string</b> parameter, starting at the character offset
+					specified by <b>$start</b>.
+				</p>
+				<p>
+					The method returns the offset of the found string, or <i>false</i> otherwise.
+				</p>
+			</div>
+
+			<h4 id="reference-irtfdocument-substr">public function  <span class="header-highlight">substr</span> ( $start, $length = false )</h4>
+			<div class="h4">
+				<p>
+					Returns a substring of the underlying Rtf document.<br />
+					This function behaves like the builtin <span class="highlight">substr()</span> function.
+				</p>
+			</div>
+
+			<h4 id="reference-irtfdocument-write">public function  <span class="header-highlight">write</span> ( $fp, $start, $length = false )</h4>
+			<div class="h4">
+				<p>
+					Writes characters from the underlying Rtf document, starting at the offset specified by the <b>$start</b> parameter, to the file resource
+					specified by <b>$fp</b>.
+				</p>
+				<p>
+					If the <b>$length</b> parameter has been specified, only this number of characters will be written to the output file ; otherwise, all
+					the characters from <b>$start</b> until the end of file will be written.
+				</p>
+			</div>
+
+			<h4 id="reference-irtfdocument-to_closing_delimiter">public function  <span class="header-highlight">to_closing_delimiter</span> ( $start = 0 )</h4>
+			<div class="h4">
+				<p>
+					Searches for the closing delimiter of a compound construct, starting at the character offset specified by the
+					<span class="highlight">$start</span> parameter.<br />
+					By convention, it is assumed that <span class="highlight">$start</span> <b>MUST</b> point to the character <b>AFTER</b> the opening brace of the compound construct.
+				</p>
+				<p>
+					You can have a look at the <a href="#reference-rtfdocument-methods-toclosingdelimiter">RtfDocument::ToClosingDelimiter</a> method for a more
+					detailed explanation.
+				</p>
+			</div>
+
+
+		<h3 id="reference-stringfiletraits">String and File support traits</h3>
+		<div class="h3">	
+			<p>
+				The <span class="highlight">RtfStringSupport</span> and <span class="highlight">RtfFileSupport</span> traits have two characteristics in common :
+
+				<div class="item-list">
+					<ul>
+						<li>
+							They implement all the methods provided by the <span class="highlight">IRtfDocument</span> interface and not implemented by the
+							<span class="highlight">RtfDocument</span> class.<br />
+							Of course, each implementation depends on the fact that the underlying document is stored as a string or a file.
+							You can have a look at the <a href="#reference-irtfdocument">IRtfDocument</a> interface for more explanations about these
+							common methods.
+						</li>
+						<li>
+							They provide a pseudo-constructor, <span class="highlight">__specialized_construct</span>, that will be called by the
+							<span class="highlight">RtfDocument</span> interface, providing the arguments given by derived classes such as 
+							<span class="highlight">RtfBeautifier</span>, <span class="highlight">RtfTexter</span>, <span class="highlight">RtfTemplater</span>
+							and <span class="highlight">RtfParser</span>.
+						</li>
+					</ul>
+				</div>
+			</p>
+		</div>
+
+		<h3 id="reference-rtfstringsupport">RtfStringSupport trait</h3>
+		<div class="h3">
+			<p>
+				The specialized constructor of the <span class="highlight">RtfStringSupport</span> trait has the following signature :
+			</p>
+
+			<div class="code">protected function  __specialized_construct ( $rtfdata, $chunk_size ) ;</div>
+
+			The parameters are the following :
+
+			<div class="item-list">
+				<ul>
+					<li class="parameter">
+						<span class="highlight">$rtfdata</span> (<i>string</i>) :<br />
+						<div>
+							Rtf data coming from an Rtf document (most probably by using the <span class="highlight">file_get_contents()</span> builtin function).
+						</div>
+					</li>
+					<li class="parameter">
+						<span class="highlight">$chunk_size</span> (<i>integer</i>) :<br />
+						<div>
+							Specifies the record size to be used when generating output Rtf data. The default record size is 4Mb.<br />
+							This record size may vary depending on the calling class.
+						</div>
+					</li>
+				</ul>
+			</div>
+
+			This "constructor" will set the <b>$Name</b> property of the parent <span class="highlight">RtfDocument</span> class to an empty string, since it does not
+			correspond to any existing file.
+		</div>
+
+		<h3 id="reference-rtffilesupport">RtfFileSupport trait</h3>
+		<div class="h3">	
+			<p>
+				The specialized constructor of the <span class="highlight">RtfFileSupport</span> trait has the following signature :
+			</p>
+
+			<div class="code">protected function  __specialized_construct ( $rtffile, $record_size = 16384, $cache_size = 8 ) ;</div>
+
+			The parameters are the following :
+
+			<div class="item-list">
+				<ul>
+					<li class="parameter">
+						<span class="highlight">$rtffile</span> (<i>string</i>) :<br />
+						<div>
+							Name of the input file containing Rtf data. An exception will be thrown if the file is not accessible or does not exist.
+						</div>
+					</li>
+					<li class="parameter">
+						<span class="highlight">$record_size</span> (<i>integer</i>) :<br />
+						<div>
+							Specifies the record size to be used when generating output Rtf data. The default record size is 16Kb.
+						</div>
+					</li>
+					<li class="parameter">
+						<span class="highlight">$cache_size</span> (<i>integer</i>) :<br />
+						<div>
+							Indicates how many buffers of <b>$record_size</b> bytes should be cached into memory.<br />
+							Caching is useful when your search operations imply going back and forth consecutive records, or when you have
+							to recall the contents of a record that has been previously read. This avoids most of the time unnecessary disk reads.
+						</div>
+					</li>
+				</ul>
+			</div>
+
+			This trait has a member, <b>$SearchableFile</b>, which is an instance of the <span class="highlight">SearchableFile</span> class. It maps
+			the underlying Rtf document to a cached memory object which allows for string searches, extractions and so on.<br />
+			Although the latest release of this <span class="highlight">SearchableFile</span> class is available in the lastest releases of the <span class="highlight">RtfTools</span>
+			package, you can also find it at <a href="http://www.phpclasses.org/package/9697-PHP-Search-large-files-that-would-not-fit-in-memory.html" target="_blank">phpclasses.org</a>
+		</div>
+
+		<h3 id="referenc1e-rtfstringfiledocument">String and File document classes</h3>
+		<div class="h3">
+			<p>
+				As this will be the case for almost all the classes of the <span class="highlight">RtfTools</span> package, you will have at a given point to decide whether to use 
+				string-based versions (consuming more memory, but less cpu and I/O) or the file-based versions (consuming pretty less memory, but more I/O).
+			</p>
+			<p>
+				Both versions provide <i>exactly</i> the same features ; the choice is thus driven by the amount of data you will have to process, and how much memory 
+				and cpu usage are available to you.
+			</p>
+			<p>
+				Although those classes do not have a great interest by themselves (you can only perform searches on the initial data, extract portions of it, and write contents to an
+				output file), they have been designed so that the <span class="highlight">RtfMerge</span> class will only work with objects inheriting from the
+				<span class="highlight">RtfDocument</span> class.
+			</p>
+			<p>
+				They have different constructors, however : you will discover them in the following sections.
+			</p>
+		</div>
+		
+		<h3 id="referenc1e-rtfstringdocument">RtfStringDocument class</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtfstringdocument-constructor">public function  <span class="header-highlight">__construct</span> ( $rtfdata, $chunk_size = 4 * 1024 * 1024 )</h4>
+			<div class="h4">
+				<p>
+					Loads an Rtf document into memory. Look at the <a href="#reference-rtfstringsupport">RtfStringSupport</a> trait for an explanation about the
+					constructor's parameters.
+				</p>
+				<p>
+					A typical usage could be :
+				</p>
+				<div class="code">$doc	=  new RtfStringDocument ( file_get_contents ( 'sample.rtf' ) ) ;</div>
+			</div>
+
+		<h3 id="referenc1e-rtffiledocument">RtfFileDocument class</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtffiledocument-constructor">public function  <span class="header-highlight">__construct</span> ( $file, $record_size = 16384, $cache_size = 8 )</h4>
+			<div class="h4">
+				<p>
+					Loads an Rtf document into memory. Look at the <a href="#reference-rtffilesupport">RtfFileSupport</a> trait for an explanation about the
+					constructor's parameters.
+				</p>
+				<p>
+					A typical usage could be :
+				</p>
+				<div class="code">$doc	=  new RtfFileDocument ( 'sample.rtf' ) ;</div>
+			</div>
+
+	</div>
+	</div>
+	
+	<div class="collapsable">
+	<h2 id="reference-rtfbeautifier">RtfBeautifier class</h2>
+	<div class="collapsable-contents">
+	<div class="h2">
+		<p>
+			The goal of the <span class="highlight">RtfBeautifier</span> class is to take an Rtf document and to produce a pretty-printed output.
+		</p>
+		<p>
+			But why wanting to pretty-print Rtf documents ? suppose that you have two Rtf documents whose contents are almost similar, and that 
+			you want to compare them.
+		</p>
+		<p>
+			Since the raw Rtf data can have several instructions grouped on the same line, you will have to make the difference between two files
+			that may have lines of Rtf data that are hundreds of characters long.
+		</p>
+		<p>
+			Comparing data formatted in such a way can be a brain-killer ; suppose for example that the files you need to compare both have the same line,
+			but one is 700 characters-long while the other one is 705 characters long, because some <span class="highlight">\pard</span> tag has been inserted
+			somewhere within.
+		</p>
+		<p>
+			When using tools such as the Unix <i>diff</i> or the Windows <i>windiff</i> command, you will find in the output that those lines differ in both
+			files, but you will have to visually compare a 700-characters long line with a 705-characters long one. If will be a tough task to identify that there
+			is an additional <span class="highlight">\pard</span> tag located inside the line of the second file.
+		</p>
+		<p>
+			This is where the <span class="highlight">RtfBeautifier</span> class comes to the scene : it is a debugging aid that takes a file and pretty-prints it
+			by putting every Rtf syntactic element on a separate line, taking care of indentation levels.
+		</p>
+		<p>
+			Pretty-printing an Rtf document is very simple ; consider the following PHP script which takes file <i>sample1.rtf</i> as input, and generates an output
+			file, <i>sample1.txt</i>, containing the pretty-printed contents ; it then repeats the same process with file <i>sample2.rtf</i> :
+		</p>
+		<div class="code">
+&lt;?php
+	include ( 'path/to/RtfBeautifier.phpclass' ) ;
+
+	$beautifier	=  new RtfFileBeautifier ( 'sample1.rtf' ) ;
+	$beautifier -> SaveTo ( 'sample1.txt' ) ;
+
+	$beautifier	=  new RtfFileBeautifier ( 'sample2.rtf' ) ;
+	$beautifier -> SaveTo ( 'sample2.txt' ) ;
+		</div>
+
+		<p>
+			Now you are able to compare files <i>sample1.txt</i> and <i>sample2.txt</i> using the <i>diff</i> or <i>windiff</i> commands (or whatever diff-like command
+			you prefer).
+		</p>
+
+		<p>
+			To give you an idea of what the output of the <span class="highlight">RtfBeautifier</span> is, consider the following Rtf sample file contents (for the sake of brevity,
+			only the start of the file is listed here, and the same line is show over 3 lines) :
+		</p>
+
+		<div class="code">
+{\rtf1\adeflang1025\ansi\ansicpg1252\uc1\adeff0\deff0\stshfdbch0\stshfloch0\stshfhich0\stshfbi0
+\deflang1036\deflangfe1036{\fonttbl{\f0\froman\fcharset0\fprq2{\*\panose 02020603050405020304}
+Times New Roman;}{\f1\fswiss\fcharset0\fprq2{\*\panose 020b0604020202020204}Arial;}
+...
+		</div>
+
+		<p>
+		The output of the <span class="highlight">RtfBeautifier</span> class will be :
+		</p>
+
+		<div class="code">
+{
+    \rtf1
+    \adeflang1025
+    \ansi
+    \ansicpg1252
+    \uc1
+    \adeff0
+    \deff0
+    \stshfdbch0
+    \stshfloch0
+    \stshfhich0
+    \stshfbi0
+    \deflang1036
+    \deflangfe1036
+    {
+        \fonttbl
+        {
+            \f0
+            \froman
+            \fcharset0
+            \fprq2
+            {
+                \*\panose
+                02020603050405020304
+             }
+            Times New Roman;
+         }
+        {
+            \f1
+            \fswiss
+            \fcharset0
+            \fprq2
+            {
+                \*\panose
+                020b0604020202020204
+             }
+            Arial;
+         }
+...
+		</div>
+
+		<p>
+			As you may not have guessed, even if it looks like Rtf contents, the output of the <span class="highlight">RtfBeautifier</span> class is not valid Rtf contents.
+			Although not clearly stated in the Microsoft Rtf Specifications, spaces cannot be put everywhere ; for example, there must be no space or line break 
+			between an opening brace ("{") and tags such as "\fonttbl" or "\rtf1".
+		</p>
+		<p>
+			As a conclusion, the <span class="highlight">RtfBeautifier</span> class is definitely a debugging tool that generates output for easy comparison of Rtf
+			files, nothing more...
+		</p>
+	</div>
+	<br />
+
+		<h3 id="reference-rtfbeautifier-diagram">Class diagram</h3>
+		<div class="h3">	
+		<p>
+			The class diagram for the <span class="highlight">RtfBeautifier</span> class is the following :
+		</p>
+		<center>
+			<a href="/images/Modeling - RtfBeautifier.png" target="_blank"
+				><img src="/images/Modeling - RtfBeautifier.png" title="RtfBeautifier class hierarchy" width="322" height="295"/></a>
+		</center>
+		</div>
+
+		<h3 id="reference-rtfbeautifier-constructor">Constructor</h3>
+		<div class="h3">	
+			<p>
+				The constructor of the abstract class <span class="highlight">RtfBeautifier</span> has the following signature :
+			</p>
+			<div class="code">
+public function  __construct  ( $options, $indentation_size ) 
+			</div>
+
+			<p>
+				The parameters are the following :
+			</p>
+
+			<div class="item-list">
+				<ul>
+					<li class="parameter">
+						<span class="highlight">$option</span> (<i>string</i>) :<br />
+						<div>
+							A set of flags that condition the pretty-printing output process. See the <a href="#reference-rtfbeautifier-constants">Constants</a>
+							section for more explanations about the available options.
+						</div>
+					</li>
+					<li class="parameter">
+						<span class="highlight">$indentation_size</span> (<i>integer</i>) :<br />
+						<div>
+							Number of spaces to be used for indenting the output.
+						</div>
+					</li>
+				</ul>
+			</div>
+
+			The <span class="highlight">RtfBeautifier</span> class is abstract so it cannot be instantiated ; you will have to look at the 
+			<a href="#reference-rtfstringbeautifier">RtfStringBeautifier</a> and <a href="#reference-rtffilebeautifier">RtfFileBeautifier</a> sections to
+			understand how to use the string-based and file-based versions.
+		</div>
+
+		<h3 id="reference-rtfbeautifier-methods">Methods</h3>
+		<div class="h3">	
+		</div>
+			<h4 id="reference-rtfbeautifier-asstring">public function  <span class="header-highlight">AsString</span> ( )</h4>
+			<div class="h4">
+				<p>
+					Returns the pretty-printed contents of an Rtf documents as a string.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfbeautifier-saveto">public function  <span class="header-highlight">SaveTo</span> ( $filename )</h4>
+			<div class="h4">
+				<p>
+					Pretty-prints the underlying Rtf document and saves the generated output to a file.<br />
+					Note that this method does not needs to load the entire document contents into memory before generating its output :
+					it reads input data by blocks and generates output data on-the-fly.
+				</p>
+			</div>
+
+		<h3 id="reference-rtfbeautifier-properties">Properties</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtfbeautifier-properties-options">public <span class="header-highlight">$Options</span></h4>
+			<div class="h4">
+				<p>
+					Options that condition the behavior of the pretty-printing process. See the <a href="#reference-rtfbeautifier-constants">Constants</a> section
+					for more explanations on this set of flags.
+				</p>
+				<p>
+					The <span class="highlight">AsString</span> and <span class="highlight">SaveTo</span> methods use the current value of this property
+					to process pretty-printing options so it is safe to modify it just before calling them.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfbeautifier-properties-indentationsize">public <span class="header-highlight">$IndentationSize</span></h4>
+			<div class="h4">
+				<p>
+					Number of spaces to be used for each indentation level.
+				</p>
+			</div>
+
+		<h3 id="reference-rtfbeautifier-constants">Constants</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtfsbeautifier-constants-beautifier">BEAUTIFIER_* constants</h4>
+			<div class="h4">
+				The <span class="highlight">BEAUTIFIER_*</span> constants allow to specify a set of flags that condition the process of pretty-printing.
+				The following flags are available :
+
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">BEAUTIFY_GROUP_SPECIAL_WORDS</span> :<br />
+							<div>
+								"Standard" Rtf tags usually have the form : "\word", followed by an optional integer parameter. However, some special tags 
+								that came after the initial Rtf specifications, or that are application-specific, may be prefixed with the special control word "\*", 
+								such as in the following example :
+							</div>
+							<div class="code">
+	\*\latentstyles
+							</div>
+							<p>
+								Microsoft says that an application not recognizing such tags should simply ignore them.
+							</p>
+							<p>
+								When this flag is not specified, the control word part ("\*") is printed on a separate line. For example :
+							</p>
+							<div class="code">
+	\*
+	\latenstyles
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">BEAUTIFY_SPLIT_ADJACENT_WORDS</span> :<br />
+							<div>
+								It is not unusual in Rtf documents to find groups of tags joined together, without any separator space (a situation which is
+								authorized by the Rtf Specifications) ; and sometimes, you will find adjacent groups of tags separated by a space ; 
+								for example :
+							</div>
+							<div class="code">
+	\af0\afs20\alang1025 \ltrch\fcs0
+							</div>
+							<p>
+								When this flag is not set, the pretty-printed output will look like :
+							</p>
+							<div class="code">
+	\af0\afs20\alang1025 
+	\ltrch\fcs0
+							</div>
+							<p>
+								When set, the same output will look like :
+							</p>
+							<div class="code">
+	\af0
+	\afs20
+	\alang1025 
+	\ltrch
+	\fcs0
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">BEAUTIFY_SPLIT_CHARS</span> :<br />
+							<div>
+								Indicates whether character code control words (of the form \'xy) should be put on a
+	    							separate line or not.
+							</div>
+							<p>
+	    							For example, "En-t&ecirc;te" is encoded as "En-t\'eate" and the encoded version will be
+	    							output as is if this flag was not specified. When specified, it will be output as :
+							</p>
+							<div class="code">
+	En-t
+	\'ea
+	te
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">BEAUTIFY_STRIP_IMAGE_DATA</span> :<br />
+							<div>
+								Images are specified the following way in an Rtf document :
+							</div>
+							<div class="code">
+	{\pict <i>image parameters</i> hexdata}
+							</div>
+							<p>
+								where <i>hexdata</i> is a sequence of hexadecimal digits (ascii 0 through 9 and a through f)
+							</p>
+							<p>
+								Since images encoded this way will take twice the size of the original image, and there should be no
+								particular reason for you to compare the same image in two different Rtf documents (unless you really want to be sure
+								that both versions are the same), setting this flag will simply strip the hexadecimal data present in the 
+								<span class="highlight">\pict</span> flag and replace them with a comment, such as in the following example :
+							</p>
+							<div class="code">
+	{
+		\pict
+		... 
+		<i>image parameters</i>
+		...
+		<span color="green">/* x bytes of image data not shown</span>
+	 }
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">BEAUTIFY_STRIP_BIN_DATA</span> :<br />
+							<div>
+								Works the same as the <span class="highlight">BEAUTIFY_STRIP_IMAGE_DATA</span> flag, but for binary data.
+							</div>
+							<p>
+								Binary data uses the <span class="highlight">\bin</span> tag, which must be followed by a parameter specifying
+								the number of bytes that follow the tag ; the following defines a 6-bytes length binary data ("123}45") :
+							</p>
+							<div class="code">
+	{\bin6 123}45}
+							</div>
+							<p>
+								You may notice a few things :
+								<div class="item-list">
+									<ul>
+										<li>
+											There is always a space beteen the <span class="highlight">\bin</span> control word and the first
+											byte of data
+										</li>
+										<li>
+											The binary data can contain any character in the range 0-255, even special characters that 
+											are normally interpreted as Rtf elements, such as "{", "}" or "\".<br />
+											Since the number of bytes to process is given by the parameter of the <span class="highlight">\bin</span>
+											tag ("6", in the above example), we are sure that we will no have anything else to parse until we have
+											collected that number of bytes. The first closing brace thus belongs to the binary data itself and will 
+											never be interpreted.<br />
+											Of course, once the six bytes of binary data will have been collected, the last closing brace will be 
+											considered to match the opening one.
+										</li>
+										<li>
+											The above example only uses plain ascii characters ; but any ascii value, from 0 to 255, is authorized.
+										</li>
+									</ul>
+								</div>
+							</p>
+						</li>
+						<li class="parameter">
+							<span class="highlight">BEAUTIFY_STRIP_DATA</span> :<br />
+							<div>
+								Same as <span class="highlight">BEAUTIFY_STRIP_IMAGE_DATA | BEAUTIFY_STRIP_BIN_DATA</span>.
+							</div>
+							<br />
+						</li>
+						<li class="parameter">
+							<span class="highlight">BEAUTIFY_ALL</span> :<br />
+							<div>
+								Enables all of the above flags.
+							</div>
+							<br />
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		<h3 id="reference-rtfstringbeautifier">RtfStringBeautifier class</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtfstringbeautifier-constructor">public function  <span class="header-highlight">__construct</span> ( $rtfdata, $options = self::BEAUTIFY_ALL, $indentation_size = 4, $chunk_size = 4 * 1024 * 1024 )</h4>
+			<div class="h4">
+				<p>
+					Creates an RtfBeautifier object, using the specified Rtf data.
+				</p>
+				<p>
+					A typical usage could be :
+				</p>
+				<div class="code">
+$doc	=  new RtfStringBeautifier ( file_get_contents ( 'sample.rtf' ) ) ;
+$doc -> SaveTo ( 'sample.txt' ) ;		// Save pretty-printed contents to output file
+echo $doc -> AsString ( ) ;			// Echo pretty-printed contents to standard output 
+				</div>
+
+				<p>
+					The parameters are the following :
+				</p>
+
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$rtfdata</span> (<i>string</i>) :<br />
+							<div>
+								Rtf document data, specified as a string.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$option</span> (<i>string</i>) :<br />
+							<div>
+								A set of flags that condition the pretty-printing output process. See the <a href="#reference-rtfbeautifier-constants">Constants</a>
+								section for more explanations about the available options.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$indentation_size</span> (<i>integer</i>) :<br />
+							<div>
+								Number of spaces to be used for indenting the output.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$chunk_size</span> (<i>integer</i>) :<br />
+							<div>
+								Buffer size used when generating output by blocks.
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+
+
+		<h3 id="reference-rtffilebeautifier">RtfFileBeautifier class</h3>
+		<div class="h3">	
+		</div>
+			<h4 id="reference-rtffilebeautifier-constructor">public function  <span class="header-highlight">__construct</span> ( $file, $options = self::BEAUTIFY_ALL, $indentation_size = 4, $record_size = 16384</h4>
+			<div class="h4">
+				<p>
+					Creates an RtfBeautifier object, without loading the file contents into memory.
+				</p>
+				<p>
+					A typical usage could be :
+				</p>
+				<div class="code">
+$doc	=  new RtfFileBeautifier ( 'sample.rtf' ) ;
+$doc -> SaveTo ( 'sample.txt' ) ;		// Save pretty-printed contents to output file
+echo $doc -> AsString ( ) ;			// Echo pretty-printed contents to standard output 
+				</div>
+
+				<p>
+					The parameters are the following :
+				</p>
+
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$file</span> (<i>string</i>) :<br />
+							<div>
+								Path to an Rtf document to be processed.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$option</span> (<i>string</i>) :<br />
+							<div>
+								A set of flags that condition the pretty-printing output process. See the <a href="#reference-rtfbeautifier-constants">Constants</a>
+								section for more explanations about the available options.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$indentation_size</span> (<i>integer</i>) :<br />
+							<div>
+								Number of spaces to be used for indenting the output.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$record_size</span> (<i>integer</i>) :<br />
+							<div>
+								Record size to be used when reading and writing data.
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+	</div>
+	</div>
+
+	<div class="collapsable">
+	<h2 id="reference-rtfmerger">RtfMerger class</h2>
+	<div class="collapsable-contents">
+	<div class="h2">	
+		<p>
+			The <span class="highlight">RtfMerger</span> class allows you to combine the contents of several Rtf files into a single one. 
+			It can be used for example for mass printing or for storing a set of related files into a single Rtf document.
+		</p>
+		<p>
+			Unlike all the other classes of this package that process Rtf contents, this class does not inherit from <span class="higlight">RtfDocument</span>. 
+		</p>
+	</div>
+
+		<h3 id="reference-rtfmerger-merging">Merging documents together</h3>
+		<div class="h3">
+			<p>
+				Merging documents together is a simple three-steps process :
+			</p>
+			<div class="item-list">
+				<ol>
+					<li>
+						Create an object of class <span class="highlight">RtfMerger</span>. Although Rtf documents can be specified as class
+						constructor's parameters, you can still add more documents later by using the 
+						<a href="#reference-rtfmerger-methods-add">Add()</a> method.
+					</li>
+					<li>
+						<i>(optional)</i> Add as many files as you want using either the <a href="#reference-rtfmerger-methods-add">Add()</a> method
+						or the array access interface that the class implements.
+					</li>
+					<li>
+						To create the merged document, either call the <a href="#reference-rtfmerger-methods-add">AsString()</a> or
+						<a href="#reference-rtfmerger-methods-add">SaveTo()</a> method.
+					</li>
+				</ol>
+			</div>
+		</div>
+
+		<h3 id="reference-rtfmerger-diagram">Class diagram</h3>
+		<div class="h3">
+			<p>
+				The <span class="highlight">RtfMerger</span> acts as a container for objects inheriting from the <a href="#reference-rtfdocument">RtfDocument</a> class.<br />
+				The diagram below shows that it contains two important member properties :
+			</p>
+			<div class="item-list">
+				<ul>
+					<li>
+						An array of <a href="#internal-reference-rtfmergerdocument">RtfMergerDocument</a> objects. Every document added to an 
+						<span class="highlight">RtfMerger</span> is wrapped by this class.
+						<p>
+							An <span class="highlight">RtfMergerDocument</span> object holds a few associative arrays that are used when some elements
+							in the header of the document are in conflict with the data already existing in the global header. They are used for renumbering
+							any reference to an existing color, font, stylesheet (and more) whenever needed.
+						</p>
+					</li>
+					<li>
+						A <i>global</i> header, of class <a href="#internal-reference-rtfmergerheader">RtfMergerHeader</a>. This header is built while
+						processing documents, to gather important information from individual document headers.
+					</li>
+				</ul>
+			</div>
+			<center>
+				<a href="/images/Modeling - RtfMerger.png" target="_blank"
+					><img src="/images/Modeling - RtfMerger.png" title="Overview of the RtfMerger class hierarchy" width="280" height="175"/></a>
+			</center>
+		</div>
+
+		<h3 id="reference-rtfmerger-process">Merging process overview</h3>
+		<div class="h3">
+			<p>
+				<i>Note : a little knowledge of the Rtf Specifications would be welcome here to better understand the merging process.</i>
+			</p>
+			<p>
+				Merging several Rtf documents together require a few manipulations. Before explaining them, a short overview of the Rtf document format is needed.
+			</p>
+			<p>
+				Rtf documents have a <i>header</i> and a <i>body</i> part ; the Microsoft Rtf Specifications state that an Rtf document is built like this :
+			</p>
+			<div class="code">
+&lt;file&gt;	::=	'{' &lt;header&gt; &lt;body&gt; '}'
+			</div>
+			<p>
+				The above description states that an Rtf document always starts with an opening brace, followed by a header part, then by a body part, and finally terminated
+				by a closing brace.
+			</p>
+			<p>
+				If we have a further look at the <i>&lt;header&gt;</i> part, we will find something like this (a quotation mark after a construct means that it is optional) :
+			</p>
+			<div class="code">
+&lt;header&gt;	::=  \rtf1 \fbidis? &lt;character set&gt; &lt;from&gt;? &lt;deffont&gt; &lt;deflang&gt; 
+			&lt;fonttbl&gt;? &lt;filetbl&gt;? &lt;colortbl&gt;? &lt;stylesheet&gt;? &lt;stylerestrictions&gt;? 
+			&lt;listtables&gt;? &lt;revtbl&gt;? &lt;rsidtable&gt;? &lt;mathprops&gt;? &lt;generator&gt;?
+			</div>
+			<p>
+				Globally, a header starts with the <span class="highlight">\rtf1</span> tag (an Rtf document always starts with the string <span class="highlight">{\rtf1</span>),
+				followed by a certain number of tags which are more or less to be seen as global document properties ; then you will see compound structures such as 
+				the font table, the color table, the style sheet table, etc.<br />
+				There are two other information that are not considered as being part of the header by the Rtf Specifications, but they are indeed specific to a document ; these
+				are :
+			</p>
+			<div class="item-list">
+				<ul>
+					<li><span class="highlight">\xmlnstbl</span> : Xml namespace table, not used by the <span class="highlight">RtfMerger</span> class</li>
+					<li>
+						<span class="highlight">\info</span>, which contains information such as the author of the document, its title, etc.
+					</li>
+				</ul>
+			</div>
+			<p>
+				The <span class="highlight">RtfMerger</span> class discards any information related to Xml namespaces, but it allows you to specify author information
+				that will be put in the final document.
+			</p>
+			<p>
+				Tables in the header part of a document define a set of items : the color table defines the colors used in the document, the font table defines the fonts
+				used in the document, the stylesheet table defines style sheets used in the document, and so on.
+			</p>
+			<p>
+				Each entry in these tables can be referred to later in the document body by using the appropriate tag (<i>control word</i>). For example, setting the foreground
+				color in a paragraph can be specified with the \cf<i>x</i> tag, where <i>x</i> is the entry number in the document color table.<br />
+				The same kind of process applies to the style sheet table, the font table, etc.
+			</p>
+			<p>
+				The problem comes when merging multiple documents together ; each document (probably) use its own header tables for colors, fonts, stylesheets and it may happen
+				that an entry from document <i>x</i> conflicts with the same entry in document <i>x+1</i>.<br/>
+				When such a situation happens (it happens in most cases), some renumbering has to occur in document <i>x+1</i> for the entries that conflict with those of
+				document <i>x</i>.
+			</p>
+			<p>
+				This is why, during the processing of a document to be merged, tables local to the document will hold entries in the corresponding
+				<span class="highlight">RtfMergerDocument</span> object, indicating which references should be 
+				renumebered, because there was already an entry having that id in the global header, but with a different definition.
+			</p>
+			<p>
+				The global header that will be generated will include all the entries coming from the first document to be merged, plus the renumbered entries coming
+				from the subsequent documents.<br />
+			</p>
+			<p>
+				The following sections give a little bit more details about each of these elements, and explain how they are handled during the merging process. You will see
+				that some tables require specialized handling when renumbering references to their elements.
+			</p>
+		</div>
+
+			<h4 id="reference-rtfmerger-process-globalproperties">Global document properties</h4>
+			<div class="h4">
+				<p>
+					The term <i>Global document properties</i> is used here to indicate tags (<i>Control words</i>, in the Microsoft terminology) that define settings
+					at the document level. The following example specifies a default language code of 1025 when paragraph settings are reset to their default (using
+					the \plain control word) ; it also specifies that the document uses the ansi character set (\ansi) along with code page 1036 (\ansicpg1036) :
+				</p>
+				<div class="code">
+	\deflang1025\ansi\ansicpg1036
+				</div>
+
+				<p>
+					The <span class="highlight">RtfMerger</span> class will collect all those various tags coming from the headers of the documents to be merged.
+					However, if a tag has been found having a different parameter value in a previously processed document, it will not be overridden and a warning
+					such as in the following example will be issued :
+				</p>
+				<div class="code">
+	Tag \ansicpg value mismatch : current = 1057, previous = 1036
+				</div>
+
+				<p>
+					In its current state of development, the <span class="highlight">RtfMerger</span> class simply ignores conflicting global document properties
+					that may come from documents processed after the first one in the merging process.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfmerger-process-colortable">Color tables</h4>
+			<div class="h4">
+				<p>
+					Color tables are specified in a compound structure that starts with the <span class="highlight">\colortbl</span> tag and contain color specifications
+					in RGB format (using the <span class="highlight">\red</span>, <span class="highlight">\green</span> and 
+					<span class="highlight">\blue</span> tags) ; color specifications are separated with a semicolon :
+				</p>
+				<div class="code">
+	{\colortbl;\red255\green255\blue255;\red0;\green0;blue0;...}
+				</div>
+				<p>
+					In the above table, 3 colors are defined :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							A color with no specification (the specification should have taken place between the <span class="highlight">\colortbl</span> tag
+							and the first semicolon : this is known as the <i>default</i> color of the document, and its index in the color table is #0).
+						</li>
+						<li>
+							The color <i>white</i> (\red255\green255\blue255;\red0), which has index #1.
+						</li>
+						<li>
+							The color <i>black</i> (\red0;\green0;blue0), which has index #2.
+						</li>
+						<li>
+							"..." stands for : <i>additional color specifications not listed here</i>.
+						</li>
+					</ul>
+				</div>
+
+				<p>
+					Color indexes are zero-based. The tags that reference a color within the body part of a document are :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">\cb<i>x</i></span>, which defines the background color to be entry <i>x</i> in the document color table.
+						</li>
+						<li>
+							<span class="highlight">\cf<i>x</i></span>, which defines the foreground color to be entry <i>x</i> in the document color table.
+						</li>
+					</ul>
+				</div>
+
+				<p>
+					When building a global color table regrouping all the colors referenced by the documents to be merged, the following rules apply :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							For each color entry of each document :
+
+							<ul>
+								<li>
+									The global color table is searched for an entry having the same characteristics (same red, green and blue values ;
+									but be aware that additional color attributes may be specified so they are also taken into account when comparing
+									two color specifications together).
+								</li>
+								<li>
+									If a color with the same characteristics exists in the global color table, then two situations can happen :
+									<ul>
+										<li>
+											The color has the same index in both the current document color table and in the global color table ;
+											in this case, references to colors in the document body (using the <span class="highlight">\cb<i>x</i></span> or
+											<span class="highlight">\cf<i>x</i></span> tags) will remain as is : no renumbering is needed.
+										</li>
+										<li>
+											The global header contains the color, but uses an index which is different from the one used by the 
+											current document ; in this case, a color substitution entry is added in the <span class="highlight">RtfMergerDocument</span>
+											color substitution table. This table will be used later for renumbering conflicting colors when performing the merge
+											operation.
+										</li>
+									</ul>
+								</li>
+								<li>
+									The global header does not contain the color ; in this case, the new color (coming from the current document) is
+									added to the global color table and a new color substitution entry is added in the <span class="highlight">RtfMergerDocument</span>
+									color subsitution table for later renumbering.
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<h4 id="reference-rtfmerger-process-fonttable">Font tables</h4>
+			<div class="h4">
+				<p>
+					Font tables are specified in a compound structure that starts with the <span class="highlight">\fonttbl</span> tag and contains font specifications
+					defined in nested compound structures. The following example defines three fonts, <i>Times New Roman</i>, <i>Arial</i>, and <i>Calibri</i>
+					that are referenced inside the document (the Rtf code has been intentionally indented for better readability) :
+				</p>
+				<div class="code">
+{\fonttbl
+	{\f0\froman\fcharset0\fprq2{\*\panose 02020603050405020304}Times New Roman;}
+	{\f1\fswiss\fcharset0\fprq2{\*\panose 020b0604020202020204}Arial;}
+	{\f39\fswiss\fcharset0\fprq2{\*\panose 020f0502020204030204}Calibri;}
+}
+				</div>
+				<p>
+					While color indexes in color tables are assigned sequentially (ie, the first color in the color table has index 0, the second has index 1, and so on), 
+					fonts have their own numbering scheme, specified by the <span class="highlight">\f</span> tag, followed by a font number.<br />
+					We can see from the above example that the <i>Times New Roman</i> font has number #0, <i>Arial</i> number #1, and <i>Calibri</i> number #39.
+				</p>
+				<p>
+					The tags that reference a font within the body part of a document are <span class="highlight">\f</span> and <span class="highlight">\af</span>.
+				</p>
+				<p>
+					Within a single document, all font numbers are unique. However, when it comes to merging multiple documents together, you need to take care that
+					the font numbers used in an individual document will not conflict with the font numbers used in another document so, again, there will be 
+					a renumbering operation during the merging process.
+				</p>
+				<p>
+					When building a global font table regrouping all the fonts defined by the documents to be merged, the following rules apply :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							Foreach font definition entry of each document :
+
+							<ul>
+								<li>
+									Build an "anonymized" version of the font definition ; an anonymized version of a font definition is built from the initial
+									font definition found in the current document, where the <span class="highlight">\f</span> tag has been removed, together 
+									with any space, tab, newline or carriage return
+									<p>
+										For example, the "anonymized" font definition for font #0 in the above example (<i>Times New Roman</i>), will give
+										the following :
+									</p>
+									<div class="code">
+{\froman\fcharset0\fprq2{\*\panose02020603050405020304}TimesNewRoman;}
+									</div>
+								</li>
+								<li>
+									If the global font table already contains such an anonymized entry (meaning that the two definitions are identical), 
+									then to situations can arise :
+
+									<ul>
+										<li>
+											Both fonts have the same id (specified with the <span class="highlight">\f</span> tag) ; in this case,
+											no renumbering will occur.
+										</li>
+										<li>
+											Both fonts have a different id ; in this case, a font substitution entry is added in the 
+											<span class="highlight">RtfMergerDocument</span> font substitution table. 
+											This table will be used later for renumbering conflicting fonts when performing the merge operation.
+										</li>
+									</ul>
+								</li>
+								<li>
+									The global header does not contain the font definition ; in this case, the new font (coming from the current document) is
+									added to the global font table and a new font substitution entry is added in the <span class="highlight">RtfMergerDocument</span>
+									font subsitution table for later renumbering.
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+
+				<p>
+					Note that the fonts coming from individual documents are renumbered sequentially, starting from 0. This means that a global font table coming from
+					the font table example above will look like this (note that the <i>Calibri</i> font, which was initially referred to as font #39, is now font #2) :
+				</p>
+				<div class="code">
+{\fonttbl
+	{\f0\froman\fcharset0\fprq2{\*\panose 02020603050405020304}Times New Roman;}
+	{\f1\fswiss\fcharset0\fprq2{\*\panose 020b0604020202020204}Arial;}
+	{\f2\fswiss\fcharset0\fprq2{\*\panose 020f0502020204030204}Calibri;}
+}
+				</div>
+			</div>
+
+			<h4 id="reference-rtfmerger-process-listtable">List tables</h4>
+			<div class="h4">
+				<p>
+					A list table is a case similar to a color table : it contains list definitions, whose id is assigned sequentially. The difference is that list
+					numbers start at 1 while color numbers are 0-based.
+				</p>
+				<p>
+					The list table of a document contains list definitions that can be referenced in the body part ; they define properties such as list levels,
+					which in turn specify attributes such as the picture to be used for bullets, the numbering scheme for this level, etc.
+				</p>
+				<p>
+					A list table definition is a compound statement that starts with the <span class="highlight">\listtable</span> tag ; it contains list definitions
+					that in turn start with the <span class="highlight">\list</span> tag, such as in the following example (for brevity, the contents of each list has been replaced
+					by an ellipsis) : 
+				</p>
+				<div class="code">
+{\listtable {\list \listid<i>x</i>...} {\list \listid<i>y</i>...} ...}
+				</div>
+				<p>
+					Lists in a document are referenced by the <span class="highlight">\ls<i>x</i></span> tag, where <i>x</i> is the 1-based list entry index into the list table.<br />
+					Each list definition must contain a <span class="highlight">\listid<i>x</i></span> tag, that specifies a unique id for this list.
+				</p>
+				<p>
+					When building a global list table regrouping all the lists referenced by the documents to be merged, the following rules apply :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							For each list definition of each document :
+
+							<ul>
+								<li>
+									The global list table is searched for an entry having the same characteristics. To do that, a "compressed" version of the
+									list definition is created by removing any space, tab, newline or carriage return.
+								</li>
+								<li>
+									If a list with the same characteristics exists in the global list table, then two situations can happen :
+									<ul>
+										<li>
+											The list has the same index in both the current document list table and in the global list table ;
+											in this case, references to this list in the document body (using the <span class="highlight">\ls<i>x</i></span> 
+											tag) will remain as is : no renumbering is needed.
+										</li>
+										<li>
+											The global header contains the list definition, but uses an index which is different from the one used by the 
+											current document ; in this case, a list substitution entry is added in the <span class="highlight">RtfMergerDocument</span>
+											list substitution table. This table will be used later for renumbering conflicting lists when performing the merge
+											operation.
+										</li>
+									</ul>
+								</li>
+								<li>
+									The global header does not contain the list ; in this case, the new list (coming from the current document) is
+									added to the global list table and a new list substitution entry is added in the <span class="highlight">RtfMergerDocument</span>
+									list subsitution table for later renumbering.
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<h4 id="reference-rtfmerger-process-listoverridetable">List Override tables</h4>
+			<div class="h4">
+				<p>
+					List override tables are complements to existing list definitions ; there are generally two types of list overrides :
+				</p>
+				<div class="list-item">
+					<ul>
+						<li>
+							Overrides that specify different formatting properties for a paragraph that has to be formatted as a list
+						</li>
+						<li>
+							Overrides that specify a different start value for lists
+						</li>
+					</ul>
+				</div>
+				<p>
+					A list override table definition is a compound statement that starts with the <span class="highlight">\listoverridetable</span> tag ; it contains list definitions
+					that in turn start with the <span class="highlight">\listoverride</span> tag, such as in the following example (for brevity, the contents of each list has been replaced
+					by an ellipsis) : 
+				</p>
+				<div class="code">
+{\listoverridetable {\listoverride \listid<i>x</i> \ls<i>a</i>...} {\listoverride \listid<i>y</i> \ls<i>b</i>...} ...}
+				</div>
+				<p>
+					Each list override definition contains two important tags :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">\listid<i>x</i></span>, which refers to the list, in the list table, having the same id
+						</li>
+						<li>
+							<span class="highlight">\ls<i>x</i></span>, the one-based number identifying this list override entry
+						</li>
+					</ul>
+				</div>
+				<p>
+					In the document body, lists are referred to using the <span class="highlight">\ls<i>x</i></span> tag.
+				</p>
+				<p>
+					The process of handling conflicting list override entries is nearly the same as the one used for font tables : conflicting override list entries
+					are "anonymized", by removing the <span class="highlight">\listid</span> and <span class="highlight">\ls</span> tags. This "anonymized" version
+					is used to check if we already encountered such a list override definition in a previous document.
+				</p>
+				<p>
+					Depending on the comparison result, the same renumbering process as the one that is used for font definitions is applied here. The only difference
+					is that the unique list ids (<span class="highlight">\listid</span> tags) are renumbered together with the override list ids
+					(<span class="highlight">\ls</span> tags).
+				</p>
+			</div>
+
+			<h4 id="reference-rtfmerger-process-stylesheettable">Stylesheet tables</h4>
+			<div class="h4">
+				<p>
+					A stylesheet table is a list of nested stylesheet definitions, which are a shorthand for specifying character, paragraph or section formatting.
+				</p>
+				<p>
+					A stylesheet table is a compound statement that starts with the <span class="highlight">\stylesheet</span> tag ; it contains in turn stylesheet
+					definitions that can specify any character, paragraph or section formatting tags, such as in the following (abbreviated) definition :
+				</p>
+				<div class="code">
+{\stylesheet
+	{\ql \li0\ri0\widctlpar\wrapdefault\aspalpha\aspnum\faauto\adjustright ...}
+	{<b>\*\ts11</b>\tsrowd\trftsWidthB3\trpaddl108\trpaddr108 ...}
+	{<b>\*\cs10</b> \additive \ssemihidden Default Paragraph Font;}
+}
+				</div>
+				<p>
+					There are a few kinds of styles, which are given by a specific tag followed by the stylesheet id ; the possible style identification tags are :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">\s<i>x</i></span> : paragraph style with id <i>x</i>.
+						</li>
+						<li>
+							<span class="highlight">\*\cs<i>x</i></span> : character style with id <i>x</i>.
+						</li>
+						<li>
+							<span class="highlight">\*\ds<i>x</i></span> : section style with id <i>x</i>.
+						</li>
+						<li>
+							<span class="highlight">\*\ts<i>x</i></span> : table style with id <i>x</i>.
+						</li>
+					</ul>
+				</div>
+				<p>
+					You will notice in the above example that the very first style (the one which starts with the <span class="highlight">\ql</span> tag) has
+					no id (ie, none of the style id tags listed above appears in it). This is the <i>default style</i>, which is by convention numbered as style #0.
+				</p>
+				<p>
+					Thus, the process of renumbering style sheets in the global header will be very similar to the one used for font tables, with the following exceptions :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>The first style not having any style identification id will have number #0</li>
+						<li>
+							Several kinds of styles must be handled (character, paragraph, section and table). 
+							They will all be renumbered sequentially.
+						</li>
+					</ul>
+				</div>
+				<p>
+					In addition, style definitions can contain tags whose parameter is a style id ; these ids must also be renumbered during the merge process. Such
+					tags are :
+				</p>
+				<div class="item list">
+					<ul>
+						<li>
+							<span class="highlight">\sbasedon</span> : Defines the style on which the current style is based on.
+						</li>
+						<li>
+							<span class="highlight">\snext</span> : Defines the style to be used in the next paragraph marked by this style.
+						</li>
+						<li>
+							<span class="highlight">\slink</span> : Link to a character style that shares the same font properties as this one.
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<h4 id="reference-rtfmerger-process-rsid">RSID</h4>
+			<div class="h4">
+				<p>
+					RSID (Revision Save IDs) are used for revision tracking. The merging process will remove anything related to revision tracking ; this includes :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							The RSID id table defined in the header part document, and indicated by the <span class="highlight">\rsidtbl</span> tag.
+							It lists all the unique ids used by all the various kinds of RSID tags used throughout the document.
+						</li>
+						<li>
+							The various RSID tags themselves :
+							<ul>
+								<li>
+									<span class="highlight">\rsid<i>x</i></span> : each time the document is saved, a new RSID is added into the RSID table.
+									This tag appears only in the RSID table.
+								</li>
+								<li>
+									<span class="highlight">\insrsid<i>x</i></span> : denotes a text that has been inserted.
+								</li>
+								<li>
+									<span class="highlight">\delrsid<i>x</i></span> : identifies text marked as deleted.
+								</li>
+								<li>
+									<span class="highlight">\charrsid<i>x</i></span> : character formatting has been changed.
+								</li>
+								<li>
+									<span class="highlight">\sectrsid<i>x</i></span> : section formatting has been changed.
+								</li>
+								<li>
+									<span class="highlight">\pararsid<i>x</i></span> : paragraph formatting has been changed.
+								</li>
+								<li>
+									<span class="highlight">\tblrsid<i>x</i></span> : table formatting has been changed.
+								</li>
+								<li>
+									<span class="highlight">\rsidroot<i>x</i></span> : identifies the start of the document history (first save).
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+				<p>
+					Preserving or removing RSIDs across the various documents to be merged is not a great issue in itself ; RSID numbers are normally numbers that 
+					are chosen randomly, so there are little chances that one RSID from document x conflicts with an RSID coming from document y. 
+				</p>
+				<p>
+					However, tracking the individual history of documents to be merged together inside the final merged document does not makes great sense.
+					After all, the main purpose of a merged document is not to be edited afterwards ; a typical usage will be to print it, or to store it 
+					unmodified in a database.
+				</p>
+				<p>
+					This is why the merging process removes any revision information, as if the whole document had been edited all at once before the first save
+					(although a first save would create by itself a first RSID).
+				</p>
+			</div>
+
+			<h4 id="reference-rtfmerger-process-shapes">Shapes</h4>
+			<div class="h4">
+				<p>
+					Shapes in a document can take various forms : they can be text areas, geometric shapes or more complex structures.
+					The fact is that each shape has its own id, identified by the <span class="highlight">\shplid</span> tag.
+				</p>
+				<p>
+					Merging two documents having shapes with the same id may result in strange things :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							You may find that everything is ok when doing a Print preview
+						</li>
+						<li>
+							However, the printed version may show shapes at positions that differ from the original document, or with
+							different size, showing truncated contents, or bigger than the original version
+						</li>
+					</ul>
+				</div>
+
+				<p>
+					This is why renumbering shapes so that they will all have a unique id in the merged document is really important.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfmerger-process-merging">The merging process</h4>
+			<div class="h4">
+				<p>
+					Now that you have a global view of what the merging process takes care about, describing its overall actions will be simpler :
+				</p>
+				<div class="item-list">
+					<ol>
+						<li>
+							Before the merging process, whenever you add a document to be merged, either by specifying it through the class
+							constructor or by using the <span class="highlight">Add()</span> method, or by using the array access methods, the transformations described in the 
+							paragraphs above will be applied to the document header and will gradually contribute to build the merged document header
+							(color table, font table, list table and so on), because your documents are wrapped by the <span class="highlight">RtfMergerDocument</span>
+							class, which performs these operations automatically.<br />
+
+							Normally, only renumbering operations occur on header tables coming from individual documents. There is one exception to this rule however :
+							stylesheets, which contain formatting information that can also occur within a document body.
+							For this reason, during this preprocessing step, their contents are processed as if they were part of the document body
+							(see the <a href="#reference-rtfmerger-methods-replacereferences">ReplaceReferences</a> protected method).
+						</li>
+						<li>
+							First, the Rtf code for the merged document is built using the <a href="#internal-reference-rtfmergerheader-buildheader">BuildHeader()</a> method
+							of the <a href="#reference-rtfmerger-properties-globalheader">GlobalHeader</a> property of the <span class="highlight">RtfMerger</span>
+							object.
+						</li>
+						<li>
+							Then, for the body part of each document, the <a href="#reference-rtfmerger-methods-replacereferences">ReplaceReferences</a> 
+							protected method will handle the hassle of renumbering what is to be renumbered (references to colors, fonts, styles and so on), using the 
+							local renumbering table that has been built during step #1.
+						</li>
+					</ol>
+				</div>
+				<p>
+					The final merged document will only be generated when you call either the <a href="#reference-rtfmerger-methods-asstring">AsString</a> or the
+					<a href="#reference-rtfmerger-methods-SaveTo">SaveTo</a> method.
+				</p>
+				<p>
+					In the first case, you will need as much memory as necessary to hold the global header plus the body parts of each document to be merged.
+				</p>
+				<p>
+					In the second case, you will only need enough memory to hold the biggest document body, or the global document header, whichever is the biggest.
+				</p>
+			</div>
+
+		<h3 id="reference-rtfmerger-constructor">Constructor</h3>
+		<div class="h3">
+			<p>
+				The <span class="highlight">RtfMerger</span> class constructor has the following signature :
+			</p>
+			<div class="code">
+public function  __construct ( [ [documents...] options] ) ;
+			</div>
+			<p>
+				An <span class="highlight">RtfMerger</span> instance without any documents in it can be created this way :
+			</p>
+			<div class="code">
+$merger		=  new RtfMerger ( ) ;
+			</div>
+			<p>
+				You can then add existing documents by using the <a href="#reference-rtfmerger-methods-add">Add</a> method or the 
+				<a href="#reference-rtfmerger-methods-arrayaccess">array access</a> methods :
+			</p>
+			<div class="code">
+$merger -> Add ( "sample1.rtf" ) ;
+$merger []	=  "sample2.rtf" ;
+$merger []	=  new RtfFileTemplater ( "sample3.rtf", $variables ) ;
+			</div>
+			<p>
+				You can also specify filenames or objects inheriting from the <span class="highlight">RtfDocument</span> class to the constructor :
+			</p>
+			<div class="code">
+$merger		=  new RtfMerger ( "sample1.rtf", "sample2.rtf", 
+				new RtfFileTemplater ( "sample3.rtf", $variables ) ) ;
+			</div>
+		</div>
+
+		<h3 id="reference-rtfmerger-methods">Methods</h3>
+		<div class="h3">
+		</div>
+
+			<h4 id="reference-rtfmerger-methods-add">public function  Add ( $args...)</h4>
+			<div class="h4">
+				<p>
+					Adds the specified documents to the merger object. <b>$args</b> can be of two types :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							An object inheriting from the <span class="highlight">RtfDocument</span> class, such as
+							<span class="highlight">RtfStringDocument</span>, <span class="highlight">RtfFileDocument</span>,
+							<span class="highlight">RtfStringTemplater</span> or <span class="highlight">RtfFileTemplater</span>.
+						</li>
+						<li>
+							A string. Depending on the options currently defined by the <a href="#reference-rtfmerger-properties">Options</a> property,
+							such a parameter will be interpreted differently :
+							<ul>
+								<li>
+									If the <span class="highlight">RTFMERGE_STRINGS_AS_FILENAMES</span> bit is set (the default), the string will be 
+									interpreted as an existing filename, and an object of type <a href="#referenc1e-rtffiledocument">RtfFileDocument</a>
+									will be added to the merger object.
+								</li>
+								<li>
+									If the <span class="highlight">RTFMERGE_STRINGS_AS_DATA</span> bit is set, the string parameter will be interpreted as
+									Rtf data and an object of type <a href="#referenc1e-rtfstringdocument">RtfStringDocument</a> will be added to the
+									merger object.
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<h4 id="reference-rtfmerger-methods-arrayaccess">Array access</h4>
+			<div class="h4">
+				<p>
+					The <span class="highlight">RtfMerger</span> class implements the <i>Countable</i>, <i>ArrayAccess</i> and <i>IteratorAggregate</i> interfaces,
+					which allows you to have access to the documents that have been added to the merger object :
+				</p>
+				<div class="code">
+$merger		=  new RtfMerger ( "sample1.rtf", "sample2.rtf" ) ;
+
+echo count ( $merger ) ;		// Will display "2"
+$doc2		=  $merger [1] ;	// $doc2 will be set to the <span class="highlight">RtfFileDocument</span> object that 
+					// has been created from "sample2.rtf" file contents
+
+// Iterate through each document
+foreach  ( $merger  as  $doc )
+	// do something with $doc, which is of type <span class="highlight">RtfFileDocument</span>
+				</div>
+			</div>
+
+			<h4 id="reference-rtfmerger-methods-asstring">public function  AsString ( )</h4>
+			<div class="h4">
+				<p>
+					Returns the merged document contents as a string.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfmerger-methods-saveto">public function  SaveTo ( $filename )</h4>
+			<div class="h4">
+				<p>
+					Saves the merged document contents to the specified filename.
+				</p>
+			</div>
+
+		<h3 id="reference-rtfmerger-properties">Properties</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtfmerger-properties-document">protected $Documents</h4>
+			<div class="h4">
+				<p>
+					Every document added through the <a href="#reference-rtfmerger-methods-add">Add</a> or <a href="#reference-rtfmerger-methods-arrayaccess">array access</a>
+					methods is put in this array, after being wrapped in an <a href="#internal-reference-rtfmergerdocument">RtfMergerDocument</a> object.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfmerger-properties-documentinfo">Document information properties</h4>
+			<div class="h4">
+				<p>
+					You can define some document-information properties that will be put in the final merged document :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>Title</li>
+						<li>Subject</li>
+						<li>Author</li>
+						<li>Manager</li>
+						<li>Company</li>
+						<li>Operator</li>
+						<li>Category</li>
+						<li>Keywords</li>
+						<li>Comment</li>
+						<li>Summary</li>
+						<li>Version</li>
+					</ul>
+				</div>
+				<p>
+					Note that the <span class="highlight">Keywords</span> property is an array of strings.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfmerger-properties-options">public $Options</h4>
+			<div class="h4">
+				<p>
+					The <span class="highlight">$Options</span> property is a set of <a href="#reference-rtfmerger-constants-rtfmerge">RTF_MERGE_*</a> constants that
+					condition the behavior of the <span class="highlight">RtfMerge</span> object.
+				</p>	
+			</div>
+
+			<h4 id="reference-rtfmerger-properties-globalheader">private $GlobalHeader</h4>
+			<div class="h4">
+				<p>
+					The <span class="highlight">$GlobalHeader</span> property holds a object of class <a href="#internal-reference-rtfmergerheader">RtfMergerHeader</a>.
+					As more documents of type <a href="#internal-reference-rtfmergerdocument">RtfMergerDocument</a> are added to the merger object, this object is complemented
+					by the new colors, fonts, stylesheets and list definitions brought by the new documents.
+				</p>
+				<p>
+					When the final document will be generated with either the <a href="#reference-rtfmerger-methods-asstring">AsString</a> or
+					<a href="#reference-rtfmerger-methods-saveto">SaveTo</a> methods, this object will return the mandatory Rtf code needed to build the document header.
+				</p>
+			</div>
+
+		<h3 id="reference-rtfmerger-constants">Constants</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtfmerger-constants-rtfmerge">RTF_MERGE_*</h4>
+			<div class="h4">
+				<p>
+					The <span class="highlight">RTF_MERGE_*</span> constants are used for the <a href="#reference-rtfmerger-properties-options">$Options</a> property 
+					to define the behavior of the <span class="highlight">RtfMerge</span> class for the merging process ; it can be any combination of the following :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">RTF_MERGER_STRINGS_AS_FILENAMES</span> : 
+							Indicates that parameters specified as string to either the class constructor, the Add() method or the array access methods are to be
+							considered as filenames.<br />
+							In this case, an object of file <a href="#referenc1e-rtffiledocument">RtfFileDocument</a> will be created for the file and added to the
+							merger object.<br />
+							This is the default option.
+						</li>
+						<li>
+							<span class="highlight">RTF_MERGER_STRINGS_AS_DATA</span> : 
+							Indicates that parameters specified as string to either the class constructor, the Add() method or the array access methods are to be
+							considered as Rtf data.<br />
+							In this case, an object of file <a href="#referenc1e-rtfstringdocument">RtfFileDocument</a> will be created for the file and added to the
+							merger object.<br />
+						</li>
+						<li>
+							<span class="highlight">RTF_MERGER_NONE</span> : 
+							No specific option. Note that the default option <span class="highlight">RTF_MERGER_STRINGS_AS_FILENAMES</span> will be set anyway.
+						</li>
+					</ul>
+				</div>
+			</div>
+	</div>
+	</div>
+
+	<div class="collapsable">
+	<h2 id="reference-rtfparser">RtfParser class</h2>
+	<div class="collapsable-contents">
+	<div class="h2">	
+	</div>
+
+		<h3 id="reference-rtfparser-diagram">Class diagram</h3>
+		<div class="h3">	
+		<p>
+			The class diagram for the <span class="highlight">RtfParser</span> class is the following :
+		</p>
+		<center>
+			<a href="/images/Modeling - RtfParser.png" target="_blank"
+				><img src="/images/Modeling - RtfParser.png" title="RtfParser class hierarchy" width="325" height="295"/></a>
+		</center>
+		</div>
+
+		<h3 id="reference-rtfparser-constructor">Constructor</h3>
+		<div class="h3">	
+		</div>
+
+		<h3 id="reference-rtfparser-methods">Methods</h3>
+		<div class="h3">	
+		</div>
+
+		<h3 id="reference-rtfparser-properties">Properties</h3>
+		<div class="h3">	
+		</div>
+
+		<h3 id="reference-rtfparser-rtfstringparser">RtfStringParser class</h3>
+		<div class="h3">	
+		</div>
+
+		<h3 id="reference-rtfparser-rtffileparser">RtfFileParser class</h3>
+		<div class="h3">	
+		</div>
+	</div>
+	</div>
+
+	<div class="collapsable">
+	<h2 id="reference-rtftemplater">RtfTemplater class</h2>
+	<div class="collapsable-contents">
+	<div class="h2">	
+	</div>
+
+		<h3 id="reference-rtftemplater-diagram">Class diagram</h3>
+		<div class="h3">	
+		<p>
+			The class diagram for the <span class="highlight">RtfTemplater</span> class is the following :
+		</p>
+		<center>
+			<a href="/images/Modeling - RtfTemplater.png" target="_blank"
+				><img src="/images/Modeling - RtfTemplater.png" title="RtfTemplater class hierarchy" width="325" height="295"/></a>
+		</center>
+		</div>
+
+		<h3 id="reference-rtftemplater-constructor">Constructor</h3>
+		<div class="h3">	
+		</div>
+
+		<h3 id="reference-rtftemplater-methods">Methods</h3>
+		<div class="h3">	
+		</div>
+
+		<h3 id="reference-rtftemplater-properties">Properties</h3>
+		<div class="h3">	
+		</div>
+	</div>
+	</div>
+
+	<div class="collapsable">
+	<h2 id="reference-rtftexter">RtfTexter class</h2>
+	<div class="collapsable-contents">
+	<div class="h2">
+		<p>
+			The <span class="highlight">RtfTexter</span> class extracts text from an Rtf document.<br />
+			Although it can perform some - very - basic text formatting, it is intended to be used mainly for text indexing purposes.
+		</p>
+		<p>
+			Extracting text from an Rtf document is pretty simple, as shown by the following example :
+		</p>
+		<div class="code">
+&lt;?php
+	include ( 'path/to/RtfTexter.phpclass' ) ;
+
+	$texter	=  new RtfFileTexter ( 'sample.rtf' ) ;
+	echo $texter -> AsString ( ) ;		// Echo text contents
+	$texter -> SaveTo ( 'sample.txt' ) ;	// Save text contents to sample.txt
+		</div>
+	</div>
+
+		<h3 id="reference-rtftexter-diagram">Class diagram</h3>
+		<div class="h3">	
+			<p>
+				The class diagram for the <span class="highlight">RtfTexter</span> class is the following :
+			</p>
+			<center>
+				<a href="/images/Modeling - RtfTexter.png" target="_blank"
+					><img src="/images/Modeling - RtfTexter.png" title="RtfTexter class hierarchy" width="325" height="372"/></a>
+			</center>
+		</div>
+
+		<h3 id="reference-rtftexter-constructor">Constructor</h3>
+		<div class="h3">	
+			<p>
+				The constructor of the <span class="highlight">RtfTexter</span> class has the following signature :
+			</p>
+			<div class="code">
+public function  __construct ( $options = self::TEXTEROPT_ALL, $page_width = 80 )
+			</div>
+			<p>
+				Parameters are the following :
+			</p>
+			<div class="item-list">
+				<ul>
+					<li>
+						<span class="highlight">$options</span> : A combination of <a href="#reference-rtftexter-constants-texteropt">TEXTEROPT_*</a> constants
+						that condition the format of the extracted text.
+					</li>
+					<li>
+						<span class="highlight">$page_width</span> : Maximum page width, when the <span class="highlight">TEXTEROPT_WRAP_TEXT</span> flag is
+						specified is set for the <b>$options</b> parameter. Text lines longer than this quantity will be wrapped.
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<h3 id="reference-rtftexter-methods">Methods</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtftexter-methods-asstring">public function  AsString ( )</h4>
+			<div class="h4">	
+				<p>
+					Returns the text contents of an Rtf document as a string.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftexter-methods-saveto">public function  SaveTo ( $filename )</h4>
+			<div class="h4">	
+				<p>
+					Saves the text contents of an Rtf document to the specified file.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftexter-methods-formatparagraphs">protected function  FormatParagraphs ( $data )</h4>
+			<div class="h4">	
+				<p>
+					Internal method. Formats the specified paragraph(s) (which may contain several lines) to fit the width specified by the 
+					<a href="reference-rtftexter-properties-pagewidth">$PageWidth</a> property.
+				</p>
+				<p>
+					This method is called only if the <a href="#reference-rtftexter-properties-options">$Options</a> property has the 
+					<span class="highlight">TEXTEROPT_WRAP_TEXT</span> flag set.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftexter-methods-setoptions">protected function  SetOptions ( $flags )</h4>
+			<div class="h4">	
+				<p>
+					Internal method. Sets the <a href="#reference-rtftexter-properties-options">$Options</a> property, together with the
+					<a href="#reference-rtftexter-properties-eol">$Eol</a> string.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftexter-methods-textifydata">protected function  TextifyData ( &$data, $nesting_level_to_reach = false )</h4>
+			<div class="h4">	
+				<p>
+					Internal method. Processes the text data to be extracted.<br />
+					Parameters are the following :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">$data</span> : variable that will receive the extracted text contents.
+						</li>
+						<li>
+							<span class="highlight">$nesting_level_to_reach</span> :
+							In some cases (such as for <span class="highlight">\headerr</span> or <span class="highlight">\footerr</span> tags, which contain the text to
+							be put in headers and footers for the current section), the <span class="highlight">TextifyData()</span> method recursively
+							calls itself to analyze specific Rtf contents.<br />
+							This parameter tells which Rtf recursion level marks the end of the analysis (ie, the final nested braces level).
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		<h3 id="reference-rtftexter-properties">Properties</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtftexter-properties-eol">public $Eol</h4>
+			<div class="h4">	
+				<p>
+					String used for end of lines.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftexter-properties-options">public $Options</h4>
+			<div class="h4">	
+				<p>
+					Option flags (a combination of <a href="#reference-rtftexter-constants-texteropt">TEXTEROPT_*</a> constants).
+				</p>
+			</div>
+
+			<h4 id="reference-rtftexter-properties-pagewidth">public $PageWidth</h4>
+			<div class="h4">	
+				<p>
+					Maximum width, in characters, of a page.
+				</p>
+				<p>
+					This setting will be enforced only if the <span class="highlight">TEXTEROPT_WRAP_TEXT</span> flag is set for the
+					<a href="#reference-rtftexter-properties-options">$Options</a> property.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftexter-properties-ignorelist">protected static $IgnoreList = [ ... ]</h4>
+			<div class="h4">	
+				<p>
+					Compound tags that can be safely ignored during text extraction.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftexter-properties-translatedcharacters">protected static $TranslatedCharacters = [ ... ]</h4>
+			<div class="h4">	
+				<p>
+					Characters that must be substituted to avoid spurious data in the output. Such characters are for example the left and right double-quotes.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftexter-properties-translatedtags">protected static $TranslatedTags = [ ... ]</h4>
+			<div class="h4">	
+				<p>
+					Tags that are to be translated either to their ascii or html entity equivalents.
+				</p>
+			</div>
+
+		<h3 id="reference-rtftexter-constants">Constants</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="reference-rtftexter-constants-texteropt">TEXTEROPT_* constants</h4>
+			<div class="h4">	
+				<p>
+					Gets/sets the flags that will condition the text extraction process. It can be any combination of the following flags :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">TEXTEROPT_INCLUDE_PAGE_HEADERS</span> : include page headers.<br />
+							Note that page headers won't be repeated on each page unless a section break is encountered.
+						</li>
+						<li>
+							<span class="highlight">TEXTEROPT_INCLUDE_PAGE_FOOTERS</span> : include page footers.<br />
+							Note that page footers won't be repeated on each page unless a section break is encountered.
+						</li>
+						<li>
+							<span class="highlight">TEXTEROPT_INCLUDE_PAGE_TITLES</span> : a synonym for :
+							<div class="code">
+TEXTEROPT_INCLUDE_PAGE_HEADERS | TEXTEROPT_INCLUDE_PAGE_FOOTERS
+							</div>
+						</li>
+						<li>
+							<span class="highlight">TEXTEROPT_USE_FORM_FEEDS</span> : use form feeds to separate pages.
+						</li>
+						<li>
+							<span class="highlight">TEXTEROPT_WRAP_TEXT</span> : wrap text, using the width specified for the
+							<a href="#reference-rtftexter-properties-pagewidth">PageWidth</a> property.
+						</li>
+						<li>
+							<span class="highlight">TEXTEROPT_EOL_STYLE_DEFAULT</span> : use the <b>PHP_EOL</b> constant for line endings.
+						</li>
+						<li>
+							<span class="highlight">TEXTEROPT_EOL_STYLE_WINDOWS</span> : use cr/lf for line endings.
+						</li>
+						<li>
+							<span class="highlight">TEXTEROPT_EOL_STYLE_UNIX</span> : use newlines for line endings.
+						</li>
+					</ul>
+				</div>
+			</div>
+
+		<h3 id="reference-rtftexter-rtfstringtexter">RtfStringTexter class</h3>
+		<div class="h3">
+		</div>
+
+			<h4 id="reference-rtftexter-rtfstringtexter-constructor">public function  __construct ( $rtfdata, $options = self::TEXTEROPT_ALL, $page_width = 80 )</h4>
+			<div class="h4">
+				<p>
+					Loads Rtf data for further extraction.
+				</p>
+				<p>
+					The parameters are the following :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">$rtfdata</span> : a whole Rtf document specified as a string.
+						</li>
+						<li>
+							<span class="highlight">$options</span> : a combination of <a href="#reference-rtftexter-constants-texteropt">TEXTEROPT_*</a> flags.
+						</li>
+					</ul>
+				</div>
+				<p>
+					A typical usage could be :
+				</p>
+				<div class="code">
+$doc	=  new RtfStringTexter ( file_get_contents ( 'sample.rtf' ) ) ;
+echo $doc -> AsString ( ) ;			// Echo text contents from file sample.rtf
+echo $doc -> SaveTo ( 'sample.txt' )  ;		// Save text contents to file sample.txt
+				</div>
+			</div>
+
+		<h3 id="reference-rtftexter-rtffiletexter">RtfFileTexter class</h3>
+		<div class="h3">	
+			<h4 id="reference-rtftexter-rtffiletexter-constructor">public function  __construct ( $file, $options = self::TEXTEROPT_ALL, $page_width = 80 )</h4>
+			<div class="h4">
+				<p>
+					Loads Rtf data from the specified file for further extraction.
+				</p>
+				<p>
+					The parameters are the following :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">$file</span> : Rtf document whose contents are to be extracted. Must be an existing file.
+						</li>
+						<li>
+							<span class="highlight">$options</span> : a combination of <a href="#reference-rtftexter-constants-texteropt">TEXTEROPT_*</a> flags.
+						</li>
+					</ul>
+				</div>
+				<p>
+					A typical usage could be :
+				</p>
+				<div class="code">
+$doc	=  new RtfFileTexter ( 'sample.rtf' ) ;
+echo $doc -> AsString ( ) ;			// Echo text contents from file sample.rtf
+echo $doc -> SaveTo ( 'sample.txt' )  ;		// Save text contents to file sample.txt
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+
+<h1 id="internal-reference">Internal classes reference</h1>
+<hr />
+<div class="h1">
+	<p>
+		This section provides a references to the classes that are used internally by the <span class="highlight">RtfTools</span> package and are not normally
+		exposed to the outside world.
+	</p>
+</div>
+
+	<div class="collapsable">
+	<h2 id="internal-reference-rtfmergerdocument">RtfMergerDocument class</h2>
+	<div class="collapsable-contents">
+	<div class="h2">
+		<p>
+			Whenever a document is added to a merger object, it is wrapped by an <span class="highlight">RtfMergerDocument</span> object which basically performs the
+			following tasks :
+		</p>	
+		<div class="item-list">
+			<ul>
+				<li>
+					Analyze the document header and extract tables such as the color table, the font table, the stylesheet table, etc.
+				</li>
+				<li>
+					Add those elements to the <a href="#reference-rtfmerger-properties-globalheader">$GlobalHeader</a> property of the parent 
+					<span class="highlight">RtfMerger</span> object.
+				</li>
+				<li>
+					Internally keep a track of the various colors, fonts, styles, lists (and so on) that needs to be renumbered when the merging process will occur.
+				</li>
+				<li>
+					Renumber references to colors, fonts, styles, lists (and so on) when the merging process occurs, and return the modified document body.
+				</li>
+			</ul>
+		</div>
+	</div>
+
+		<h3 id="internal-reference-rtfmergerdocument-constructor">Constructor</h3>
+		<div class="h3">
+			<p>
+				The constructor of the <span class="highlight">RtfMergerDocument</span> class has the following signature :
+			</p>
+			<div class="code">
+public function  __construct ( $parent, $document, $global_header )
+			</div>
+			<p>
+				Parameters are the following :
+			</p>
+			<div class="item-list">
+				<ul>
+					<li>
+						<span class="highlight">$parent</span> : Parent object, of class <a href="#reference-rtfmerger">RtfMerger</a>
+					</li>
+					<li>
+						<span class="highlight">$document</span> : Document object to be wrapped, inheriting from the  <a href="#reference-rtfdocument">RtfDocument</a> class.
+					</li>
+					<li>
+						<span class="highlight">$global_header</span> : The object that contains the global header for the merged document. This is an object
+						of class <a href="#internal-reference-rtfmergerheader">RtfMergerHeader</a>.
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<h3 id="internal-reference-rtfmergerdocument-methods">Methods</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-methods-extractcolortable">protected function  ExtractColorTable ( $header )</h4>
+			<div class="h4">	
+				<p>
+					Extracts the color table from the document header. Updates the global header acordingly and holds a table of color renumberings in case of conflicts.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-methods-extractfonttable">protected function  ExtractFontTable ( $header )</h4>
+			<div class="h4">	
+				<p>
+					Extracts the font table from the document header. Updates the global header acordingly and holds a table of font renumberings in case of conflicts.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-methods-extractlisttable">protected function  ExtractListTable ( $header )</h4>
+			<div class="h4">	
+				<p>
+					Extracts the list table from the document header. Updates the global header acordingly and holds a table of list renumberings in case of conflicts.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-methods-extractoverridelisttable">protected function  ExtractOverrideListTable ( $header )</h4>
+			<div class="h4">	
+				<p>
+					Extracts the override list table from the document header. Updates the global header acordingly and holds a table of list override renumberings in case of conflicts.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-methods-extractstylesheettable">protected function  ExtractStylesheetTable ( $header )</h4>
+			<div class="h4">	
+				<p>
+					Extracts the stylesheet table from the document header. Updates the global header acordingly and holds a table of stylesheet renumberings in case of conflicts.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-methods-extractsettings">protected function  ExtractSettings ( $header )</h4>
+			<div class="h4">	
+				<p>
+					Extracts the various settings that can be found in a header of an Rtf document, specified as single tags.
+				</p>
+				<p>
+					In the current version, a warning will be issued if one of the documents has a header setting different from the first one that has been encountered.
+					Future versions may be able to handle different setting values more gracefully.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-methods-getbody">public function  GetBody ( $remove_rsid = true )</h4>
+			<div class="h4">	
+				<p>
+					Returns the body of the underlying document, once all the renumbering operations have been applied for the color tables, font tables, stylesheet tables and so on.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-methods-replacereferences">protected function  ReplaceReferences ( $text, $remove_rsid = false, $renumber_shapes = false )</h4>
+			<div class="h4">	
+				<p>
+					This method is called by the <a href="#internal-reference-rtfmergerdocument-methods-getbody">GetBody</a> method to replace any reference 
+					to colors, fonts, styles and lists with their new number in the merged document.
+				</p>
+				<p>
+					The <b>$remove_rsid</b> parameter specifies whether revision history information should be removed from the document body. Although the method's default
+					value is <i>false</i>, the <span class="highligh">RtfMerger</span> class always set it to <i>true</i>.
+				</p>
+				<p>
+					The <b>$renumber_shapes</b> parameter specifies whether shapes should also be renumbered. The only reason why this parameter should be <i>false</i> is when
+					processing stylesheet contents.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-methods-replacestylesheetreferences">protected function  ReplaceStylesheetReferences ( )</h4>
+			<div class="h4">	
+				<p>
+					Since stylesheets contain formatting tags, some of them may reference elements that need to be renumbered (colors, fonts, etc.).
+					This method calls the <span class="highlight">ReplaceReferences</span> method to perform the necessary replacements that apply to 
+					stylesheets contents.
+				</p>
+			</div>
+
+		<h3 id="internal-reference-rtfmergerdocument-properties">Properties</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-properties-bodyoffset">protected $BodyOffset</h4>
+			<div class="h4">
+				<p>
+					Holds the byte offset, into the underlying Rtf document, of the body start.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-properties-debug">private static  $DEBUG = false</h4>
+			<div class="h4">
+				<p>
+					Outputs debug information when set to a combination of the 
+					<a href="#internal-reference-rtfmergerdocument-constants-rtfmergerdebug">RTFMERGER_DEBUG_*</a> constants.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-properties-document">protected $Document</h4>
+			<div class="h4">
+				<p>
+					Holds the underlying document object.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-properties-parent">protected $Parent</h4>
+			<div class="h4">
+				<p>
+					Holds the parent <a href="#reference-rtfmerger">RtfMerger</a> object.
+				</p>
+			</div>
+
+		<h3 id="internal-reference-rtfmergerdocument-constants">Constants</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="internal-reference-rtfmergerdocument-constants-rtfmergerdebug">RTFMERGER_DEBUG_* constants</h4>
+			<div class="h4">
+				<p>
+					The <span class="highlight">RTFMERGER_DEBUG_*</span> constants can be used to define the <span class="highlight">RtfMergerDocument::$DEBUG</span> property
+					to output useful debug information :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">RTFMERGER_DEBUG_COLOR_EXTRACTION</span> : outputs debug information about color table entries renumerings.
+						</li>
+						<li>
+							<span class="highlight">RTFMERGER_DEBUG_FONT_EXTRACTION</span> : outputs debug information about font table entries renumerings.
+						</li>
+						<li>
+							<span class="highlight">RTFMERGER_DEBUG_LIST_EXTRACTION</span> : outputs debug information about list table entries renumerings.
+						</li>
+						<li>
+							<span class="highlight">RTFMERGER_DEBUG_OVERRIDE_EXTRACTION</span> : outputs debug information about list override table entries renumerings.
+						</li>
+						<li>
+							<span class="highlight">RTFMERGER_DEBUG_STYLESHEET_EXTRACTION</span> : outputs debug information about stylesheet table entries renumerings.
+						</li>
+						<li>
+							<span class="highlight">RTFMERGER_DEBUG_SETTINGS</span> : outputs debug information about the header settings that have been found
+							in the underlying document header.
+						</li>
+						<li>
+							<span class="highlight">RTFMERGER_DEBUG_ALL</span> : enables all debug information.
+						</li>
+						<li>
+							<span class="highlight">RTFMERGER_DEBUG_NONE</span> : disables all debug information.
+						</li>
+					</ul>
+				</div>
+			</div>
+
+	</div>
+	</div>
+
+	<div class="collapsable">
+	<h2 id="internal-reference-rtfmergerheader">RtfMergerHeader class</h2>
+	<div class="collapsable-contents">
+	<div class="h2">
+		<p>
+			The <span class="highight">RtfMergerHeader</span> is used internally by the <a href="#reference-rtfmerger">RtfMerger</a> class to collect header information
+			from the various documents to be merged.
+		</p>	
+		<p>
+			During this process of collecting information, the class has to be considered as <i>passive</i> : it is manipulated by the various 
+			<a href="#internal-reference-rtfmergerdocument">RtfMergerDocument</a> instances that represent the documents to be merged.<br />
+			Each instance adds the header information contained in its own underlying Rtf document to this object.
+		</p>
+	</div>
+
+		<h3 id="internal-reference-rtfmergerheader-constructor">Constructor</h3>
+		<div class="h3">
+			<p>
+				The constructor has no parameter and only instantiates an object of class <span class="highlight">RtfMergerHeader</span>.
+			</p>
+		</div>
+
+		<h3 id="internal-reference-rtfmergerheader-methods">Methods</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="internal-reference-rtfmergerheader-methods-buildheader">public function  BuildHeader ( )</h4>
+			<div class="h4">	
+				<p>
+					Returns the Rtf code for the header (<i>aka</i> Global header) of the output merged file.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-methods-getcolortable">public function  GetColorTable ( )</h4>
+			<div class="h4">	
+				<p>
+					Returns the Rtf code for the color table containing all the colors coming from the documents to be merged.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-methods-getdocumentinformation">public function  GetDocumentInformation ( )</h4>
+			<div class="h4">	
+				<p>
+					Returns the Rtf code for document information (see the 
+					<a href="#internal-reference-rtfmergerheader-properties-documentinfo">Document Information Properties</a> section for
+					more information).
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-methods-getfonttable">public function  GetFontTable ( )</h4>
+			<div class="h4">	
+				<p>
+					Returns the Rtf code for the font table containing all the font definitions coming from the documents to be merged.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-methods-getgenerator">public function  GetGenerator ( )</h4>
+			<div class="h4">	
+				<p>
+					Returns the Rtf code for the generator entry, which specifies the software that has generated the document.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-methods-getlisttable">public function  GetListTable ( )</h4>
+			<div class="h4">	
+				<p>
+					Returns the Rtf code for the list table containing all the list definitions coming from the documents to be merged.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-methods-getlistoverridetable">public function  GetListOverrideTable ( )</h4>
+			<div class="h4">	
+				<p>
+					Returns the Rtf code for the list override table containing all the list overrides coming from the documents to be merged.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-methods-getstylesheettable">public function  GetStylesheetTable ( )</h4>
+			<div class="h4">	
+				<p>
+					Returns the Rtf code for the stylesheet table containing all the stylesheets coming from the documents to be merged.
+				</p>
+			</div>
+
+		<h3 id="internal-reference-rtfmergerheader-properties">Properties</h3>
+		<div class="h3">	
+		</div>
+
+			<h4 id="internal-reference-rtfmergerheader-properties-colortable">public  $ColorTable  = []</h4>
+			<div class="h4">
+				<p>
+					An associative array whose keys are the color definitions, and whose values are color indexes.
+				</p>
+				<p>
+					See the <a href="#reference-rtfmerger-process-colortable">Color tables</a> section of <a href="#reference-rtfmerger-process">Merger process</a> 
+					for more information on how this table is built and upgraded when processing new documents to be merged.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-properties-documentinfo">Document information properties</h4>
+			<div class="h4">
+				<p>
+					Document information is a special compound tag (<span class="highlight">\info</span>) that allows you to specify creator's information in an Rtf
+					document. All the properties below can be accessed through the <a href="#reference-rtfmerger">RtfMerger</a> object, without the "Info" prefix :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>InfoTitle</li>
+						<li>InfoSubject</li>
+						<li>InfoAuthor</li>
+						<li>InfoManager</li>
+						<li>InfoCompany</li>
+						<li>InfoOperator</li>
+						<li>InfoCategory</li>
+						<li>InfoKeywords</li>
+						<li>InfoComment</li>
+						<li>InfoSummary</li>
+						<li>InfoVersion</li>
+					</ul>
+				</div>
+				<p>
+					All those properties default to the value <i>false</i>. When set to a string, they will be written in the <span class="highlight">\info</span> tag
+					when generating the merged document.
+				</p>
+				<p>
+					The creation and revision times will also be automatically added to the output document information.
+				</p>
+				<p>
+					Note that the <span class="highlight">InfoKeywords</span> property is an array of strings.
+				</p>
+				<p>
+					See the <a href="#reference-rtfmerger-properties-documentinfo">Document information properties</a> section of <a href="#reference-rtfmerger-process">Merger process</a> 
+					for more information on how these properties can be accessed directly through an <span class="highlight">RtfMerger</span> object.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-properties-fonttable">public  $FontTable  = []</h4>
+			<div class="h4">
+				<p>
+					An associative array whose keys are the md5 hash of the "anonymized" version of the font definition, and whose values are associative arrays
+					containing the following entries :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">def</span> : the complete Rtf code for the font definition, including the font id, which has been
+							renumbered if needed
+						</li>
+						<li>
+							<span class="highlight">id</span> : the font id, which may have been renumbered if needed.
+						</li>
+					</ul>
+				</div>
+				<p>
+					See the <a href="#reference-rtfmerger-process-fonttable">Font tables</a> section of <a href="#reference-rtfmerger-process">Merger process</a> 
+					for more information on how this table is built and upgraded when processing new documents to be merged.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-properties-listtable">public  $ListTable  = []</h4>
+			<div class="h4">
+				<p>
+					An associative array whose keys are the md5 hash of the "anonymized" version of the list definition, and whose values are associative arrays
+					containing the following entries :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">def</span> : the complete Rtf code for the list definition, including the list id, which has been
+							renumbered if needed
+						</li>
+						<li>
+							<span class="highlight">id</span> : the list id, which may have been renumbered if needed.
+						</li>
+					</ul>
+				</div>
+				<p>
+					See the <a href="#reference-rtfmerger-process-listtable">List tables</a> section of <a href="#reference-rtfmerger-process">Merger process</a> 
+					for more information on how this table is built and upgraded when processing new documents to be merged.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-properties-listoverridetable">public  $ListOverrideTable  = []</h4>
+			<div class="h4">
+				<p>
+					An array containing the list overrides, where the references to the list entries have been renumbered when necessary.
+				</p>
+				<p>
+					See the <a href="#reference-rtfmerger-process-listoverridetable">List override tables</a> section of <a href="#reference-rtfmerger-process">Merger process</a> 
+					for more information on how this table is built and upgraded when processing new documents to be merged.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-properties-nextshapeid">public  $NextShapeId = 1000</h4>
+			<div class="h4">
+				<p>
+					Shapes are one of the rare elements contained in the body part of a document that need to be renumbered to avoid conflicts across multiple documents.<br />
+					The initial value is 1000. It could be anything else, but Microsoft Word seems to like starting at this value when numbering shapes, so it has been
+					chosen to be the initial value of the very first shape encountered in the very first document.
+				</p>
+				<p>
+					This number is incremented each time a new shape is found in some document.
+				</p>
+				<p>
+					See the <a href="#reference-rtfmerger-process-shapes">Shapes</a> section of <a href="#reference-rtfmerger-process">Merger process</a> 
+					for more information on how shape numbering is processed across multiple documents.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-properties-settings">public  $Settings  = []</h4>
+			<div class="h4">
+				<p>
+					An associative array whose keys are tags (<i>aka</i> as Control Words, in the Microsoft documentation), and whose values are the tag
+					parameter.
+				</p>
+				<p>
+					See the <a href="#reference-rtfmerger-process-globalproperties">Global properties</a> section of <a href="#reference-rtfmerger-process">Merger process</a> 
+					for more information on how this table is built and upgraded when processing new documents to be merged.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtfmergerheader-properties-stylesheettable">public  $StylesheetTable  = []</h4>
+			<div class="h4">
+				<p>
+					An associative array whose keys are the md5 hash of the "anonymized" version of the stylesheet definition, and whose values are associative arrays
+					containing the following entries :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">def</span> : the complete Rtf code for the stylesheet definition, including the stylesheet id, which has been
+							renumbered if needed
+						</li>
+						<li>
+							<span class="highlight">id</span> : the stylesheet id, which may have been renumbered if needed.
+						</li>
+					</ul>
+				</div>
+				<p>
+					Note that stylesheets can include tags such as <span class="highlight">\sbasedon<i>x</i></span>, <span class="highlight">\snext<i>x</i></span> and
+					<span class="highlight">\slink<i>x</i></span>, where <i>x</i> is also a stylesheet index.<br />
+					Those indexes are also renumbered if necessary.
+				</p>
+				<p>
+					See the <a href="#reference-rtfmerger-process-stylesheettable">Stylesheet tables</a> section of <a href="#reference-rtfmerger-process">Merger process</a> 
+					for more information on how this table is built and upgraded when processing new documents to be merged.
+				</p>
+			</div>
+	</div>
+	</div>
+
+	<div class="collapsable">
+	<h2 id="internal-reference-rtftoken">RtfToken classes</h2>
+	<div class="collapsable-contents">
+	<div class="h2">
+		<p>
+			The <a href="#reference-rtfparser-methods-nexttoken">NextToken</a> method of the <span class="highlight">RtfParser</span> class is used to parse Rtf documents and
+			retrieve the next token available from the Rtf stream.
+		</p>
+		<p>
+			The type of value returned by this method is always an object inheriting from the <span class="highlight">RtfToken</span> abstract class. 
+		</p>
+		<p>
+			If you have browsed the <span class="highlight">RtfTools</span> package documentation and source code, you may have noticed that most of the classes
+			use their own, simplified, internal parser. This is the case for example for classes such as <a href="#reference-rtfbeautifier">RtfBeautifier</a> and
+			<a href="#reference-rtftemplater">RtfTemplater</a>, where the parsing needs are really basic and do not need an elaborate method to analyze Rtf contents.
+		</p>
+		<p>
+			In some situations, however, you may have more complex needs in terms of parsing. This is the case of the <a href="#reference-rtftexter">RtfTexter</a> class,
+			which needs to differentiate between pure plain text, and what is to be considered as a parameter of a compound statement ; you will encounter such situations
+			with font definitions for example, which look like this :
+		</p>
+		<div class="code">
+{\f1 ... Times New Roman;}
+...
+{\par ... This is a sample paragraph.}
+		</div>
+		<p>
+			The string <i>"Times New Roman;"</i> in the above example is not plain text, but rather the display name of the font identified by id #1
+			(<span class="highlight">\f1</span> tag).
+		</p>
+		<p>
+			The second line, however, introduces a new paragraph, whose contents are <i>"This is a sample paragraph."</i>. By using the <span class="highlight">RtfParser</span>
+			class, you will be able to distinguish whether the additional text specified before the closing brace is to be interpreted as text or not.
+		</p>
+		<p>
+			The sections below describe the various kinds of objects returned by the <span class="highlight">NextToken</span> method of the
+			<span class="highlight">RtfParser</span> class.
+		</p>
+		<p>
+			The section related to the <span class="highlight">RtfToken</span> class shows the methods and properties common to all its derived classes.
+			The sections related to classes inheriting from <span class="highlight">RtfToken</span> will only show the differences and additions specific to 
+			those classes.
+		</p>
+		<p>
+			All of these classes are instantiated by the <a href="#reference-rtfparser-methods-nexttoken">NextToken</a> method of the <span class="highlight">RtfParser</span> class,
+			and are not meant to be instantiated from other places.
+		</p>
+	</div>
+
+		<h3 id="internal-reference-rtftoken-diagram">Class diagram</h3>
+		<div class="h3">
+			<p>
+				The following diagram shows the hierarchy of the various <span class="highlight">RtfToken</span> classes :
+			</p>	
+			<center>
+				<a href="/images/help/Modeling - RtfToken.png" target="_blank"
+					><img src="/images/help/Modeling - RtfToken.png" title="Overview of the RtfToken class hierarchy" width="380" height="465"/></a>
+			</center>
+		</div>
+
+		<h3 id="internal-reference-rtftoken-rtftoken">RtfToken class</h3>
+		<div class="h3">
+			<p>
+				The <span class="highlight">RtfToken</span> astract class provides public properties and methods that are common to every syntactic element that
+				can be found in an Rtf document.
+			</p>
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtftoken-constructor">Constructor</h4>
+			<div class="h4">
+				<p>
+					The <span class="highlight">RtfToken</span> class constructor is called by all its derived classes and has the following signature :
+				</p>	
+				<div class="code">
+public function  __construct ( $type, $text, $space_after, $offset, $line, $column )
+				</div>
+				<p>
+					The parameters are the following :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">$type</span> :
+							Token type (one of the <a href="#reference-rtfdocument-constants-token">TOKEN_*</a> constants defined in the
+							<a href="#reference-rtfdocument">RtfDocument</a> class).
+						</li>
+						<li>
+							<span class="highlight">$text</span> :
+							The whole token text, as found in the Rtf stream, also containing the optional space that may be present after.
+						</li>
+						<li>
+							<span class="highlight">$space_after</span> :
+							True if the token is followed by a space (a space following a token is considered as belonging to the token).
+						</li>
+						<li>
+							<span class="highlight">$offset</span> :
+							Byte offset of the start of the token, in the Rtf input stream.
+						</li>
+						<li>
+							<span class="highlight">$line</span> :
+							Line number where the token starts, in the Rtf input stream.
+						</li>
+						<li>
+							<span class="highlight">$column</span> :
+							Column number where the token starts, in the Rtf input stream.
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<h4 id="internal-reference-rtftoken-rtftoken-methods">Methods</h4>
+			<div class="h4">	
+			</div>
+
+				<h5 id="internal-reference-rtftoken-rtftoken-methods-tortf">public function  ToRtf ( )</h5>
+				<div class="h5">	
+					<p>
+						Returns the whole token, as it was found in the Rtf stream.
+					</p>
+				</div>
+
+				<h5 id="internal-reference-rtftoken-rtftoken-methods-totext">public function  ToText ( )</h5>
+				<div class="h5">	
+					<p>
+						Returns the whole token, as it was found in the Rtf stream.<br />
+						This behavior may be changed by derived classes.
+					</p>
+				</div>
+
+				<h5 id="internal-reference-rtftoken-rtftoken-methods-tostring">public function  __tostring ( )</h5>
+				<div class="h5">	
+					<p>
+						A synonym for <span class="highlight">ToRtf</span>.
+					</p>
+				</div>
+
+			<h4 id="internal-reference-rtftoken-rtftoken-properties">Properties</h4>
+			<div class="h4">	
+			</div>
+
+				<h5 id="internal-reference-rtftoken-rtftoken-properties-column">public $Column</h5>
+				<div class="h5">	
+					<p>
+						Column number of the start of the Rtf tag in the input document. Column numbers start at 1.
+					</p>
+				</div>
+
+				<h5 id="internal-reference-rtftoken-rtftoken-properties-line">public $Line</h5>
+				<div class="h5">	
+					<p>
+						Line number of the start of the Rtf tag in the input document. Line numbers start at 1.
+					</p>
+				</div>
+
+				<h5 id="internal-reference-rtftoken-rtftoken-properties-offset">public $Offset</h5>
+				<div class="h5">	
+					<p>
+						Byte offset of the start of the Rtf tag in the input document. Byte offsets start at 0.
+					</p>
+				</div>
+
+				<h5 id="internal-reference-rtftoken-rtftoken-properties-spaceafter">public $SpaceAfter</h5>
+				<div class="h5">	
+					<p>
+						Set to <i>true</i> if the related tag has a space after (spaces after a control word are to be considered as being part
+						of the control word, not as plain text).
+					</p>
+				</div>
+
+
+				<h5 id="internal-reference-rtftoken-rtftoken-properties-text">public $Text</h5>
+				<div class="h5">	
+					<p>
+						Contains the Rtf syntactic element, as it has been found in the input Rtf stream.
+					</p>
+				</div>
+				
+
+				<h5 id="internal-reference-rtftoken-rtftoken-properties-type">public $Type</h5>
+				<div class="h5">	
+					<p>
+						Token type, as described in the <a href="#reference-rtfdocument-constants-token">TOKEN_*</a> section of the
+						<span class="highlight">RtfDocument</span> class.
+					</p>
+				</div>
+
+		<h3 id="internal-reference-rtftoken-rtfcontrolsymboltoken">RtfControlSymbolToken class</h3>
+		<div class="h3">	
+			<p>
+				Implements a control symbol token, such as <span class="highlight">\~</span> (unbreakable space) or <span class="highlight">\-</span> (optional hyphen).
+			</p>
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfcontrolsymboltoken-constructor">Constructor</h4>
+			<div class="h4">	
+				<p>
+					The constructor of the <span class="highlight">RtfControlSymbolToken</span> class has the following signature :
+				</p>
+				<div class="code">
+public function  __construct  ( $char, $offset, $line, $column )
+				</div>
+				<p>
+					The <span class="highlight">$char</span> parameter indicates the character following the leading backslash.
+					Other parameters are the same as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtftoken-rtfcontrolsymboltoken-methods">Methods</h4>
+			<div class="h4">	
+			</div>
+
+				<h5 id="internal-reference-rtftoken-rtfcontrolsymboltoken-methods-totext">public function  ToText ( )</h5>
+				<div class="h5">	
+					<p>
+						Returns the token text, ie the real character expressed by the input Rtf tag. The following subsitutions occur :
+					</p>
+					<div class="item-list">
+						<ul>
+							<li>
+								<span class="highlight">\~</span> (unbreakable space) : the returned value will be a space.
+							</li>
+							<li>
+								<<span class="highlight">\-</span> (optional hyphen) and <span class="highlight">\_</span> (hyphen) : the returned
+								value will be the string "-".
+							</li>
+							<li>
+								All other values : the character after the leading backslash will be returned.
+							</li>
+						</ul>
+					</div>
+				</div>
+
+		<h3 id="internal-reference-rtftoken-rtfcontrolwordtoken">RtfControlWordToken class</h3>
+		<div class="h3">	
+			<p>
+				Implements a control word, such as <span class="highlight">\par</span> or <span class="highlight">\f12</span>.
+			</p>
+			<p>
+				This class also handles "special" control words, that are preceded by the <span class="highlight">\*</span> special construct, such as in :
+				<span class="highlight">\*\panose</span>.
+			</p>
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfcontrolwordtoken-constructor">Constructor</h4>
+			<div class="h4">
+				<p>
+					The class constructor has the following signature :
+				</p>	
+				<div class="code">
+public function  __construct  ( $word, $space, $special, $offset, $line, $column )
+				</div>
+				<p>
+					The <span class="highlight">$word</span> parameter holds the control word itself, followed by its optional integer parameter.
+				</p>
+				<p>
+					The <span class="highlight">$special</span> parameter is a boolean value that indicates whether the control word was preceded by the
+					<span class="highlight">\*</span> special construct or not.
+				</p>
+				<p>
+					Other parameters are the same as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtftoken-rtfcontrolwordtoken-properties">Properties</h4>
+			<div class="h4">	
+			</div>
+
+				<h5 id="internal-reference-rtftoken-rtfcontrolwordtoken-properties-controlword">ControlWord</h5>
+				<div class="h5">	
+					<p>
+						Control word. For a tag such as <span class="highlight">\*\pnseclvl1</span>, this property will contain the string "pnseclvl".
+					</p>
+				</div>
+
+				<h5 id="internal-reference-rtftoken-rtfcontrolwordtoken-properties-parameter">Parameter</h5>
+				<div class="h5">	
+					<p>
+						Holds the optional integer parameter after the control word. 
+						For a tag such as <span class="highlight">\*\pnseclvl1</span>, this property will contain the integer value "1".
+					</p>
+					<p>
+						If the control word does not contain any parameter, this property will be set to the empty string.
+					</p>
+				</div>
+
+				<h5 id="internal-reference-rtftoken-rtfcontrolwordtoken-properties-special">Special</h5>
+				<div class="h5">	
+					<p>
+						A boolean value that indicates whether the control word is a special one, ie preceded by the <span class="highlight">\*</span> construct.
+					</p>
+				</div>
+
+		<h3 id="internal-reference-rtftoken-rtfdatatoken">RtfDataToken class</h3>
+		<div class="h3">	
+			<p>
+				The <span class="highlight">RtfDataToken</span> class is a base abstract class for Rtf compound constructs that end with some data before the last closing brace.
+				Such a construct could be for example a picture, denoted by the <span class="highlight">\pict</span> control word.
+			</p>
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfdatatoken-constructor">Constructor</h4>
+			<div class="h4">	
+				<p>
+					The constructor of the <span class="highlight">RtfDataToken</span> class has the following signature :
+				</p>
+				<div class="code">
+public function  __construct ( $type, $data, $offset, $line, $column )
+				</div>
+				<p>
+					The <span class="highlight">$data</span> parameter holds the data that has been found before the last closing brace.
+				</p>
+				<p>
+					Other parameters are the same as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+		<h3 id="internal-reference-rtftoken-rtfbdatatoken">RtfBDataToken class</h3>
+		<div class="h3">
+			<p>
+				The <span class="highlight">RtfBData</span> class is intended for maybe the only tag in the Rtf specifications that has a parameter which gives the length
+				of the data immediately following it : the <span class="highlight">\bin</span> tag.
+			</p>
+			<p>
+				The following example defines some binary data which is 10 bytes long :
+			</p>
+			<div class="code">
+{\bin10 0123456789}
+			</div>
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfbdatatoken-constructor">Constructor</h4>
+			<div class="h4">
+				<p>
+					The constructor of the <span class="highlight">RtfBDataToken</span> class has the following signature :
+				</p>
+				<div class="code">
+public function  __construct ( $data, $offset, $line, $column )
+				</div>
+				<p>
+					The <span class="highlight">$data</span> parameter holds the binary data located just after the <span class="highlight">\bin</span> control word
+					(in the example above, this would be the string "0123456789").
+				</p>
+				<p>
+					Other parameters are the same as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtftoken-rtfdatatoken-properties">Properties</h4>
+			<div class="h4">	
+			</div>
+
+				<h5 id="internal-reference-rtftoken-rtfdatatoken-properties-relatedcontrolword">RelatedControlWord</h5>
+				<div class="h5">
+					<p>
+						Indicates the control word which is related to this data entry (<span class="highlight">\pict</span> for pictures,
+						<span class="highlight">\bin</span> for binary data, and any other control word that starts a compound statement containing character data).
+					</p>	
+				</div>
+
+		<h3 id="internal-reference-rtftoken-rtfpcdatatoken">RtfPCDataToken class</h3>
+		<div class="h3">
+			<p>
+				Holds free-form text data specified within curly braces.
+			</p>	
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfpcdatatoken-constructor">Constructor</h4>
+			<div class="h4">	
+				<p>
+					The constructor of the <span class="highlight">RtfPCData</span> token has the following signature :
+				</p>
+				<div class="code">
+public function  __construct ( $data, $offset, $line, $column )
+				</div>
+				<p>
+					The <span class="highlight">$data</span> parameter holds text data located just before the closing brace.
+				</p>
+				<p>
+					Other parameters are the same as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtftoken-rtfpcdatatoken-methods">Methods</h4>
+			<div class="h4">	
+			</div>
+
+				<h5 id="internal-reference-rtftoken-rtfpcdatatoken-methods-totext">ToText</h5>
+				<div class="h5">	
+					<p>
+						Returns the character data after removing newlines and carriage returns, which are not part of the text.
+					</p>
+				</div>
+
+		<h3 id="internal-reference-rtftoken-rtfsdatatoken">RtfSDataToken class</h3>
+		<div class="h3">
+			<p>
+				The <span class="highlight">RtfSData</span> class holds hexadecimal data that represent an embedded image. This is typically the kind of data
+				found in <span class="highlight">\pict</span> tags :
+			</p>	
+			<div class="code">
+{\pict 0ABC2937DF...}
+			</div>
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfsdatatoken-constructor">Constructor</h4>
+			<div class="h4">	
+				<p>
+					The constructor of the <span class="highlight">RtfSData</span> token has the following signature :
+				</p>
+				<div class="code">
+public function  __construct ( $data, $offset, $line, $column )
+				</div>
+				<p>
+					The <span class="highlight">$data</span> parameter holds text data located just before the closing brace.
+				</p>
+				<p>
+					Other parameters are the same as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+		<h3 id="internal-reference-rtftoken-rtfescapedcharactertoken">RtfEscapedCharacterToken class</h3>
+		<div class="h3">	
+			<p>
+				Holds a character representation specified using the <span class="highlight">\'<i>xy</i></span> notation, where <i>x</i> and <i>y</i> are hexadecimal
+				digits representing the character code in the Windows Ansi character set.
+			</p>
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfescapedcharactertoken-constructor">Constructor</h4>
+			<div class="h4">
+				<p>
+					The constructor of the <span class="highlight">RtfEscapedCharacterToken</span> class has the following signature :
+				</p>
+				<div class="code">
+public function  __construct ( $hex, $offset, $line, $column )
+				</div>
+				<p>
+					The <span class="highlight">$hex</span> parameter specifies the integer code of the character specification that has been found in the input Rtf stream.
+				</p>
+				<p>
+					Other parameters are the same as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtftoken-rtfescapedcharactertoken-methods">Methods</h4>
+			<div class="h4">	
+			</div>
+
+				<h5 id="internal-reference-rtftoken-rtfescapedcharactertoken-methods-totext">public function ToText()</h5>
+				<div class="h5">
+					<p>
+						Returns the underlying character value, as a string.
+					</p>
+				</div>
+
+			<h4 id="internal-reference-rtftoken-rtfescapedcharactertoken-properties">Properties</h4>
+			<div class="h4">	
+			</div>
+
+				<h5 id="internal-reference-rtftoken-rtfescapedcharactertoken-properties-char">public $Char</h5>
+				<div class="h5">	
+					<p>
+						Holds the string value of the character.
+					</p>
+				</div>
+
+				<h5 id="internal-reference-rtftoken-rtfescapedcharactertoken-properties-ord">public $Ord</h5>
+				<div class="h5">	
+					<p>
+						Holds the integer character code.
+					</p>
+				</div>
+
+		<h3 id="internal-reference-rtftoken-rtfescapedexpressiontoken">RtfEscapedExpressionToken class</h3>
+		<div class="h3">
+			<p>
+				The <span class="highlight">RtfEscapedExpressionToken</span> class is designed to represent escaped characters that may have a special syntactic
+				meaning within an Rtf document, such as <span class="highlight">\{</span>, <span class="highlight">\}</span> and <span class="highlight">\\</span>.
+			</p>	
+			<p>
+				Although such cases could have been covered by the <a href="#internal-reference-rtftoken-rtfcontrolsymboltoken">RtfControlSymbolToken</a> class, 
+				they have been intentionally made distinct so that more advanced parsers can make the difference between both cases without requiring further testing.
+			</p>
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfescapedexpressiontoken-constructor">Constructor</h4>
+			<div class="h4">	
+				<p>
+					The constructor of the <span class="highlight">RtfEscapedExpressionToken</span> class has the following signature :
+				</p>
+				<div class="code">
+public function  __construct ( $char, $offset, $line, $column )
+				</div>
+				<p>
+					The <span class="highlight">$char</span> parameter specifies the character immediately after the backslash.
+				</p>
+				<p>
+					Other parameters are the same as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+			<h4 id="internal-reference-rtftoken-rtfescapedexpressiontoken-methods">Methods</h4>
+			<div class="h4">	
+					<p>
+						Returns the character following the backslash, as a string.
+					</p>
+			</div>
+
+			<h4 id="internal-reference-rtftoken-rtfescapedexpressiontoken-properties">Properties</h4>
+			<div class="h4">	
+			</div>
+				<h5 id="internal-reference-rtftoken-rtfescapedexpressiontoken-properties-char">public $Char</h5>
+				<div class="h5">	
+					<p>
+						Holds the string value of the character.
+					</p>
+				</div>
+
+		<h3 id="internal-reference-rtftoken-rtfinvalidtoken">RtfInvalidToken class</h3>
+		<div class="h3">
+			<p>
+				In some cases, the <a href="#reference-rtfparser-methods-nexttoken">NextToken</a> method of the <span class="highlight">RtfParser</span> class can return a
+				token having the <span class="highlight">RtfInvalidToken</span> class, to indicate that something unexpected was found in the input Rtf stream.
+			</p>	
+			<p>
+				Such cases can arise in the following situations :
+			</p>
+			<div class="item-list">
+				<ul>
+					<li>
+						The <i>xy</i> part of a character specification of the form <span class="highlight">\'xy</span> is not a string of EXACTLY two hexadecimal digits.
+					</li>
+					<li>
+						The next character after a backslash cannot be interpreted as an escaped character, a character expression, a special character or the start of a 
+						control word.
+					</li>
+					<li>
+						The next character after a backslash is the end-of-file.
+					</li>
+				</ul>
+			</div>
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfinvalidtoken-constructor">Constructor</h4>
+			<div class="h4">
+				<p>
+					The constructor of the <span class="highlight">RtfInvalidToken</span> class has the following signature :
+				</p>	
+				<div class="code">
+public function  __construct ( $text, $offset, $line, $column )
+				</div>
+				<p>
+					All parameters have the same meaning as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+		<h3 id="internal-reference-rtftoken-rtfleftbracetoken">RtfLeftBraceToken class</h3>
+		<div class="h3">
+			<p>
+				The <span class="highlight">RtfLeftBrace</span> class represents an opening brace, which is one of the basic Rtf syntactic elements.
+			</p>	
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfleftbracetoken-constructor">Constructor</h4>
+			<div class="h4">	
+				<p>
+					The constructor of the <span class="highlight">RtfLeftBraceToken</span> class has the following signature :
+				</p>	
+				<div class="code">
+public function  __construct ( $space_after, $offset, $line, $column )
+				</div>
+				<p>
+					All parameters have the same meaning as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+		<h3 id="internal-reference-rtftoken-rtfnewlinetoken">RtfNewlineToken class</h3>
+		<div class="h3">
+			<p>
+				The <span class="highlight">RtfNewlineToken</span> class represents a line break that has been encountered in the input Rtf stream.
+				Since line breaks, which are normally represented by newlines or cr+lf's, are not significant, extended parsers relying on the
+				<a href="#reference-rtfparser">RtfParser</a> class can safely ignore them (note that the current line and column positions in the Rtf
+				input stream will be updated accordingly anyway).
+			</p>	
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfnewlinetoken-constructor">Constructor</h4>
+			<div class="h4">	
+				<p>
+					The constructor of the <span class="highlight">RtfLeftBraceToken</span> class has the following signature :
+				</p>	
+				<div class="code">
+public function  __construct ( $text, $offset, $line, $column )
+				</div>
+				<p>
+					All parameters have the same meaning as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+
+		<h3 id="internal-reference-rtftoken-rtfrightbracetoken">RtfRightBraceToken class</h3>
+		<div class="h3">	
+			<p>
+				The <span class="highlight">RtfRightBrace</span> class represents an opening brace, which is one of the basic Rtf syntactic elements.
+			</p>	
+		</div>
+
+			<h4 id="internal-reference-rtftoken-rtfrightbracetoken-constructor">Constructor</h4>
+			<div class="h4">	
+				<p>
+					The constructor of the <span class="highlight">RtfRightBraceToken</span> class has the following signature :
+				</p>	
+				<div class="code">
+public function  __construct ( $space_after, $offset, $line, $column )
+				</div>
+				<p>
+					All parameters have the same meaning as for the <span class="highlight">RtfToken</span> class.
+				</p>
+			</div>
+	</div>
+	</div>
+
+</div>
+
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<div class="site-footer">
+		Any question or issue ? please feel free to contact me at : <a href="mailto:christian.vigh@rtftools.net">christian.vigh@rtftools.net</a>
+	</div>
+
+</body>
+</html>

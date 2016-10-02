@@ -50,6 +50,11 @@
     [Version : 1.0]	[Date : 2016-08-18]     [Author : CV]
 	Initial version.
 
+    [Version : 1.0.1]	[Date : 2016-09-30]     [Author : CV]
+	. The ArrayAccess interface was not properly implemented.
+	. There was a name mismatch between the document information properties (Title, Subject, etc.) and their
+	  counterparts in the $GlobalHeader object (InfoTitle, InfoSubject, etc.).
+
  **************************************************************************************************************/
 
 require_once ( dirname ( __FILE__ ) . '/RtfDocument.phpclass' ) ;
@@ -73,9 +78,9 @@ class  RtfMerger		//extends		Object
 
 	const		RTFMERGE_STRINGS_MASK		=   0x0003 ;
 
-	// Default paper size (A4) -1cm is approximately 567 twips
-	const		DEFAULT_PAPER_WIDTH		=  11907 ;
-	const		DEFAULT_PAPER_HEIGHT		=  16839 ;
+	// Default paper size (A4) - 1cm is approximately 567 twips
+	const		DEFAULT_A4_PAPER_WIDTH		=  11907 ;
+	const		DEFAULT_A4_PAPER_HEIGHT		=  16839 ;
 
 	// List of documents to be merged
 	protected	$Documents			=  [] ;
@@ -184,19 +189,23 @@ class  RtfMerger		//extends		Object
 	 *-------------------------------------------------------------------------------------------------------------*/
 	public function  __get ( $member )
 	   {
-		if  ( isset ( $this -> GlobalHeader -> $member ) )
-			return ( $this -> GlobalHeader -> $member ) ;
+		$real_member	=  "Info$member" ;
+
+		if  ( isset ( $this -> GlobalHeader -> $real_member ) )
+			return ( $this -> GlobalHeader -> $real_member ) ;
 		else
-			error ( new RuntimeException ( "Undefined property \"$member\"" ) ) ;
+			error ( new \Thrak\System\UndefinedPropertyException ( $member ) ) ;
 	    }
 
 
 	public function  __set ( $member, $value )
 	   {
-		if  ( isset ( $this -> GlobalHeader -> $member ) )
-			$this -> GlobalHeader -> $member	=  $value ;
+		$real_member	=  "Info$member" ;
+
+		if  ( isset ( $this -> GlobalHeader -> $real_member ) )
+			$this -> GlobalHeader -> $real_member	=  $value ;
 		else
-			error ( new RuntimeException ( "Undefined property \"$member\"" ) ) ;
+			error ( new \Thrak\System\UndefinedPropertyException ( $member ) ) ;
 	    }
 
 
@@ -234,7 +243,7 @@ class  RtfMerger		//extends		Object
 			  In this case, an object of class RtfStringDocument will be created.
 	
 	 *-------------------------------------------------------------------------------------------------------------*/
-	public function  Add ( $object )
+	public function  Add ( $object, $offset = false )
 	   {
 		if  ( is_subclass_of ( $object, 'RtfDocument' ) )
 			$instance	=  $object ;
@@ -249,7 +258,10 @@ class  RtfMerger		//extends		Object
 							   "inheriting from the RtfDocument class." ) ) ;
 		    }
 
-		$this -> Documents []	=   new RtfMergerDocument ( $this, $instance, $this -> GlobalHeader ) ;
+		if  ( $offset  ===  false )
+			$this -> Documents []		=   new RtfMergerDocument ( $this, $instance, $this -> GlobalHeader ) ;
+		else
+			$this -> Documents [ $offset ]	=   new RtfMergerDocument ( $this, $instance, $this -> GlobalHeader ) ;
 	    }
 
 
@@ -309,6 +321,7 @@ class  RtfMerger		//extends		Object
 
 		$header		=  $this -> GlobalHeader -> BuildHeader ( ) ;
 		fwrite ( $fp, $header ) ;
+		unset ( $header ) ;
 		$section	=  '' ;
 
 		foreach  ( $this -> Documents  as  $document )
@@ -345,10 +358,10 @@ class  RtfMerger		//extends		Object
 	   { return  ( $offset  >=  0  &&  $offset  <  count ( $this -> Documents ) ) ; }
 
 	public function  offsetGet ( $offset )
-	   { return ( $this -> Documents [$i] ) ; }
+	   { return ( $this -> Documents [ $offset ] -> Document ) ; }
 
 	public function  offsetSet ( $offset, $value )
-	   { $this -> __add_document ( $value, $this -> Options, $offset ) ; }
+	   { $this -> Add ( $value, $offset ) ; }
 	
 	public function  offsetUnset ( $offset )
 	   { unset ( $this -> Documents [ $offset ] ) ; }

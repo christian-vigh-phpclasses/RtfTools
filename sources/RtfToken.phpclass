@@ -11,7 +11,7 @@
         Christian Vigh, 10/2015.
 
     HISTORY
-    [Version : 1.0]    [Date : 2015/10/16]     [Author : CV]
+    [Version : 1.0]	[Date : 2015/10/16]     [Author : CV]
         Initial version.
 
  **************************************************************************************************************/
@@ -219,7 +219,7 @@ class  RtfControlWordToken 		extends  RtfToken
 /*==============================================================================================================
 
     RtfEscapedExpression class -
-        Implements an escaped expression containig characters that may be interpreted as Rtf tokens
+        Implements an escaped expression containing characters that may be interpreted as Rtf tokens
 	(example : \{, \} and \\).
 
   ==============================================================================================================*/
