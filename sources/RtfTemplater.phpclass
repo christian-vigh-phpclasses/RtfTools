@@ -191,8 +191,12 @@
         Christian Vigh, 08/2016.
 
     HISTORY
-        [Version : 1.0]		[Date : 2016-08-29]     [Author : CV]
-                Initial version.
+    [Version : 1.0]	[Date : 2016-08-29]     [Author : CV]
+	Initial version.
+
+    [Version : 1.0.1]	[Date : 2016-10-25]     [Author : CV]
+	. The __evaluate() method reported the last error defined before calling it, instead of resetting it
+	  before calling the eval() function().
 
  **************************************************************************************************************/
 require_once ( dirname ( __FILE__ ) . '/RtfDocument.phpclass' ) ;
@@ -1216,32 +1220,44 @@ abstract class 	RtfTemplater 	extends  RtfDocument
 	//	- In the global variables
 	private function  __evaluate_expression ( $text )
 	   {
-		preg_match_all ( '/ \$ (?P<vname> [A-Z_][A-Z0-9_]* ) /ix', $text, $var_matches ) ;
-
-		$variable_defs		=  [] ;
-
-		for  ( $i = 0, $count = count ( $var_matches [ 'vname' ] ) ; $i  <  $count ; $i ++ )
+		// Clear any previous error
+		// This is a horrible kludge to "clear" the last error for PHP versions < 7, which do not have the error_clear_last() function
+		if  ( self::$HasErrorClearLast )
+			error_clear_last ( ) ;
+		else
 		   {
-			$vname	=  $var_matches [ 'vname' ] [$i] ;
-
-			if  ( isset ( $this -> Variables [ $vname ] ) )
-				$variable_defs []	=  "\$$vname = " . $this -> __quote ( $this -> Variables [ $vname ] ) ;
-			else if  ( isset ( $GLOBALS [ $vname ] ) )
-				$variable_defs []	=  "global \$$vname" ;
-			else
-			   {
-				$variable_defs []		=  "\$$vname = ''" ;
-				$this -> __warning ( "Variable $vname is not defined." ) ;
-				$this -> Variables [ $vname ]	= '' ;
-			    }
-
+			set_error_handler ( 'var_dump', 0 ) ;
+			@$__error_get_last_horrible_kludge__ ;
+			restore_error_handler ( ) ;
 		    }
 
-		$expression	=  str_replace ( '/\bmod\b/ix', '%', $text ) ;
-		$eval_command	=  implode ( ' ; ', $variable_defs ) . ' ; return ( ' . $expression . ' ) ; ' ; 
-		$result		=  $this -> __evaluate ( $eval_command ) ;
+		// Evaluate the expression
+		$result		=  @eval ( $expr ) ;
 
-		return ( $result ) ; 
+		// Now, either there was no error ; in this case, the last error will not have been reset and we should have a message
+		// talking about an undefined variable named "__error_get_last_horrible_kludge__" that we tried to reference at the entry
+		// of this function... OR
+		// the eval'ed expression was incorrect, so error_get_last() will return a real error message.
+		if  ( ( $status  =  error_get_last ( ) )  &&  strpos ( $status [ 'message' ], '__error_get_last_horrible_kludge__' )  ===  false )
+		   {
+			$error		=  trim ( str_replace ( "\r", '', $status [ 'message' ] ) ) ;
+
+			// Horrible kludge to "clear" last error for PHP versions < 7
+			if  ( self::$HasErrorClearLast )
+				error_clear_last ( ) ;
+			else
+			   {
+				set_error_handler ( 'var_dump', 0 ) ;
+				@$__error_get_last_horrible_kludge__ ;
+				restore_error_handler ( ) ;
+			    }
+		    }
+		else
+			$error		=  false ;
+		
+		$result		=   [ 'error' => $error, 'value' => $result ] ;
+		
+		return ( $result ) ;
 	    }
 
 
@@ -1289,9 +1305,9 @@ abstract class 	RtfTemplater 	extends  RtfDocument
 	private function  __add_standard_variables ( )
 	   {
 		if  ( isset ( $this -> File ) )
-			$this -> Variables [ 'FILENAME' ]	=  $this -> File ;
+			$this -> Variables [ '__FILENAME__' ]	=  $this -> File ;
 		else
-			$this -> Variables [ 'FILENAME' ]	=  '' ;
+			$this -> Variables [ '__FILENAME__' ]	=  '' ;
 	    }
 
 
