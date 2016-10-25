@@ -2624,8 +2624,161 @@ foreach  ( $merger  as  $doc )
 	<div class="collapsable">
 	<h2 id="reference-rtftemplater">RtfTemplater class</h2>
 	<div class="collapsable-contents">
-	<div class="h2">	
+	<div class="h2">
+		<p>
+			The <span class="highlight">RtfTemplater</span> class allows for processing <i>template</i> documents using a specific macro language,
+			in order to generate different final Rtf documents whose contents will depend on the input you supplied. Such input is mainly given
+			through variables with as many different values as you have documents to process.
+		</p>
 	</div>
+
+		<h3 id="reference-rtftemplater-overview">Overview</h3>
+		<div class="h3">
+			<p>
+				The principle of templating documents is really simple and needs only 3 steps :
+			</p>
+			<div class="item-list">
+				<ol>
+					<li>
+						Create a template document using the macro-language constructs provided by the <span class="highlight">RtfTemplater</span> class.
+						This document will be able to reference variables, but also expressions to be substituted in place, IF/THEN/ELSE constructs and
+						FOR loops.
+					</li>
+					<li>
+						As you may have guessed, the final output document will contain customized contents, depending on the input you supplied. So the next
+						step is to instantiate an object of class <span class="highlight">RtfDocument</span>, providing it with values of variables that
+						are used inside the template document and that will condition the contents of the final document.
+					</li>
+					<li>
+						Use either the <a href="#reference-rtftemplater-methods-AsString">AsString</a> or <a href="#reference-rtftemplater-methods-SaveTo">SaveTo</a>
+						methods to generate the final document.
+					</li>
+				</ol>
+			</div>
+		</div>
+
+			<h4 id="reference-rtftemplater-overview-creating">Creating your first template</h4>
+			<div class="h4">	
+				<p>
+					To create your first template, simply use your favorite word processor as long as it can save or export contents into Rtf format. Such an editor 
+					could be Microsoft Word, OpenOffice, LibreOffice or even Wordpad !
+				</p>
+				<p>
+					The following example document (let's assume this is an Rtf document) references 4 variables : TITLE, FIRSTNAME, LASTNAME and SENDER. It also uses
+					the PHP date() function to put the current date :
+				</p>
+				<div class="code code-border">
+Date : %( date ( 'd/m/Y' ) )%
+
+Dear %$TITLE% %$FIRSTNAME% %$LASTNAME%,
+
+	Your reservation for the year 2016 Annual Congress of Pataphysical Scientists 
+	has been confirmed.
+
+Regards,
+%$SENDER%.
+				</div>
+				<p>
+					You can notice a few things from the above document template :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							Template constructs are always enclosed with percent signs
+						</li>
+						<li>
+							References to template variables must be preceded by a dollar sign, such as in : $TITLE
+						</li>
+						<li>
+							It is possible to call PHP functions in expressions ; in the above example, we are calling the <i>date()</i> function.
+						</li>
+						<li>
+							Expressions must start with the string "%(" and end with ")%", otherwise the templater will try to evaluate them
+							as variables.
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<h4 id="reference-rtftemplater-overview-generating">Generating personalized documents</h4>
+			<div class="h4">	
+				<p>
+					A simple script will allow us to generate personalized documents from the document template we saw in the previous section.
+				</p>
+				<p>
+					The first thing we need to do is to include the <i>RtfTemplater.phpclass</i> file :
+				</p>
+				<div class="code">
+include ( 'RtfTemplater.phpclass' ) ;
+
+$template_file	=  'example.rtf' ;	// Assume this is our example template above
+				</div>
+				<p>
+					Now, we will need to supply some data to generate personalized documents, using different values for the <i>TITLE</i>, <i>FIRSTNAME</i>, 
+					<i>LASTNAME</i> and <i>SENDER</i> variables referenced in our template.
+				</p>
+				<p>
+					To do that, we have to put individual values in an array ; the example below declares an array that contains the variable substitutions
+					for 3 recipients :
+				</p>
+				<div class="code">
+$recipients 		=  
+   [
+	[
+		'TITLE'		=> 'Ms',
+		'FIRSTNAME'	=> 'Jane',
+		'LASTNAME'	=> 'Doe',
+		'SENDER'	=> 'Alfred Jarry, Senior Pataphysics Engineer'
+	 ],
+	[
+		'TITLE'		=> 'Mr',
+		'FIRSTNAME'	=> 'John',
+		'LASTNAME'	=> 'Smith',
+		'SENDER'	=> 'Alfred Jarry, Senior Pataphysics Engineer'
+	 ],
+	[
+		'TITLE'		=> 'Mr',
+		'FIRSTNAME'	=> 'Peter',
+		'LASTNAME'	=> 'Watson',
+		'SENDER'	=> 'Alfred Jarry, Senior Pataphysics Engineer'
+	 ]
+    ] ;
+				</div>
+				<p>
+					Now we can generate an output document for each entry in our <b>$recipients</b> array ; we will build a loop, 
+					and create a new instance of the <b>RtfTemplater</b> class, using our base template document and recipient data :
+				</p>
+				<div class="code">
+for  ( $index = 1, $count = count ( $recipients ) ; $index  <=  $count ; $index ++ )
+   {
+	$recipient	=  $recipients [ $index ] ;
+	$templater	=  new RtfTemplater ( $template_file, $recipient ) ;
+	$templater -> SaveTo ( "output.$index.rtf", $recipient ) ;
+    }
+				</div>
+			</div>
+
+			<h4 id="reference-rtftemplater-overview-viewing">Viewing the results</h4>
+			<div class="h4">	
+				<p>
+					The sample code above will generate 3 files : "output.1.rtf", "output.2.rtf" and "output.3.rtf". Let's view one of them :
+				</p>
+				<div class="code code-border">
+Date : 25/10/2016
+
+Dear Ms Jane Doe,
+
+	Your reservation for the year 2016 Annual Congress of Pataphysical Scientists 
+	has been confirmed.
+
+Regards,
+Alfred Jarry, Senior Pataphysics Engineer.
+				</div>
+				<p>
+					That's all ! you just created your first mailing script.
+				</p>
+			</div>
+
 
 		<h3 id="reference-rtftemplater-diagram">Class diagram</h3>
 		<div class="h3">	
