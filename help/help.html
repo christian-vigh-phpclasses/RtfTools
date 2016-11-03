@@ -309,8 +309,8 @@ $(document). ready
 		</p>
 		<br />
 		<center>
-			<a href="/images/Modeling - RtfDocument.png" target="_blank"
-				><img src="/images/Modeling - RtfDocument.png" title="Overview of the RtfDocument class hierarchy" width="325" height="390"/></a>
+			<a href="/images/Modeling-RtfDocument.png" target="_blank"
+				><img src="/images/Modeling-RtfDocument.png" title="Overview of the RtfDocument class hierarchy" width="325" height="390"/></a>
 		</center>
 	</div>
 	<br />
@@ -371,8 +371,8 @@ $(document). ready
 			</p>	
 			<br />
 			<center>
-				<a href="/images/Modeling - RtfTemplater.png" target="_blank"
-					><img src="/images/Modeling - RtfTemplater.png" title="Overview of the RtfDocument class hierarchy" width="325" height="295"/></a>
+				<a href="/images/Modeling-RtfTemplater.png" target="_blank"
+					><img src="/images/Modeling-RtfTemplater.png" title="Overview of the RtfDocument class hierarchy" width="325" height="295"/></a>
 			</center>
 			
 			<p>
@@ -587,8 +587,8 @@ C:\ > windiff sample1.txt sample2.txt
 			</p>
 			<br />
 			<center>
-				<a href="/images/Modeling - RtfDocument.png" target="_blank"
-					><img src="/images/Modeling - RtfDocument.png" title="Overview of the RtfDocument class hierarchy" width="325" height="390"/></a>
+				<a href="/images/Modeling-RtfDocument.png" target="_blank"
+					><img src="/images/Modeling-RtfDocument.png" title="Overview of the RtfDocument class hierarchy" width="325" height="390"/></a>
 			</center>
 		</div>
 		<br />
@@ -1386,8 +1386,8 @@ Times New Roman;}{\f1\fswiss\fcharset0\fprq2{\*\panose 020b0604020202020204}Aria
 			The class diagram for the <span class="highlight">RtfBeautifier</span> class is the following :
 		</p>
 		<center>
-			<a href="/images/Modeling - RtfBeautifier.png" target="_blank"
-				><img src="/images/Modeling - RtfBeautifier.png" title="RtfBeautifier class hierarchy" width="322" height="295"/></a>
+			<a href="/images/Modeling-RtfBeautifier.png" target="_blank"
+				><img src="/images/Modeling-RtfBeautifier.png" title="RtfBeautifier class hierarchy" width="322" height="295"/></a>
 		</center>
 		</div>
 
@@ -1797,8 +1797,8 @@ echo $doc -> AsString ( ) ;			// Echo pretty-printed contents to standard output
 				</ul>
 			</div>
 			<center>
-				<a href="/images/Modeling - RtfMerger.png" target="_blank"
-					><img src="/images/Modeling - RtfMerger.png" title="Overview of the RtfMerger class hierarchy" width="280" height="175"/></a>
+				<a href="/images/Modeling-RtfMerger.png" target="_blank"
+					><img src="/images/Modeling-RtfMerger.png" title="Overview of the RtfMerger class hierarchy" width="280" height="175"/></a>
 			</center>
 		</div>
 
@@ -2594,8 +2594,8 @@ foreach  ( $merger  as  $doc )
 			The class diagram for the <span class="highlight">RtfParser</span> class is the following :
 		</p>
 		<center>
-			<a href="/images/Modeling - RtfParser.png" target="_blank"
-				><img src="/images/Modeling - RtfParser.png" title="RtfParser class hierarchy" width="325" height="295"/></a>
+			<a href="/images/Modeling-RtfParser.png" target="_blank"
+				><img src="/images/Modeling-RtfParser.png" title="RtfParser class hierarchy" width="325" height="295"/></a>
 		</center>
 		</div>
 
@@ -2782,25 +2782,511 @@ Alfred Jarry, Senior Pataphysics Engineer.
 
 		<h3 id="reference-rtftemplater-diagram">Class diagram</h3>
 		<div class="h3">	
-		<p>
-			The class diagram for the <span class="highlight">RtfTemplater</span> class is the following :
-		</p>
-		<center>
-			<a href="/images/Modeling - RtfTemplater.png" target="_blank"
-				><img src="/images/Modeling - RtfTemplater.png" title="RtfTemplater class hierarchy" width="325" height="295"/></a>
-		</center>
+			<p>
+				The class diagram for the <span class="highlight">RtfTemplater</span> class is the following :
+			</p>
+			<center>
+				<a href="/images/help/Modeling-RtfTemplater.png" target="_blank"
+					><img src="/images/help/Modeling-RtfTemplater.png" title="RtfTemplater class hierarchy" width="325" height="295"/></a>
+			</center>
 		</div>
+
+		<h3 id="reference-rtftemplater-language">Templater macro-language reference</h3>
+		<div class="h3">
+			<p>
+				The templating pseudo-language implements a few simple control structures. All expressions can reference variables that have been passed to the constructor 
+				of the	<span class="highlight">RtfStringTemplater</span> or <span class="highlight">RtfFileTemplater</span> class constructor :
+			</p>
+			<div class="code">
+$variables	=
+   [
+	'VNAME1'	=>  'the value of vname1',
+	'VNAME2'	=>  'the value of vname2',
+	'INDEX'		=>  17,
+	'ARRAY'		=>  [ 'string a', 'string b', 'string c' ],
+	'TITLE'		=>  'M.'
+    ] ;
+$document	=  new  RtfStringTemplater ( $contents, $variables ) ;
+			</div>
+			<p>
+				Array keys are simply variable names, which are case-sensitive, while array values represent the string that will be substituted whenever
+				the variable is referenced in the document.
+			</p>
+			<p>
+				Note that in the above example, one of the variables, <i>ARRAY</i>, is not scalar ; such an array variable can be used in 
+				<span class="highlight">FOREACH</span> constructs.
+			</p>
+		</div>
+
+			<h4 id="reference-rtftemplater-language-overview">Language overview</h4>
+			<div class="h4">
+				The macro templating language provides the following constructs :
+				<div class="item-list">
+					<ul>
+						<li>
+							References to variables
+						</li>
+						<li>
+							Computed expressions
+						</li>
+						<li>
+							IF constructs
+						</li>
+						<li>
+							FOR/REPEAT loops
+						</li>
+					</ul>
+				</div>
+				<p>
+					Every macro language construct must be surrounded by percent signs, as in the following examples :
+				</p>
+				<div class="code">
+%$VARIABLE%
+%( date ( 'd/m/Y' ) )%
+%FOR ( $I = 1 TO $INDEX )
+				</div>
+				<p>
+					Paragraph marks (line breaks) between the enclosing percent signs of an instruction are ignored.
+				</p>
+				<p>
+					Compound statements such as IF or loops can be nested.
+				</p>
+				<p>
+					The <span class="highlight">RtfTemplater</span> class tries to be as smart as possible when differentiating macro constructs
+					from regular document contents.<br />
+					However, some situations can make the macro language interpreter a little bit confused ; see the 
+					<a href="reference-rtftemplater-language-percentsigns">Coping with percent signs</a> paragraph for an explanation on how to
+					avoid such situations.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftemplater-language-expressions">Expressions</h4>
+			<div class="h4">
+				<p>
+					Expressions can reference variables passed to the class constructor, but they can also use any operators or functions provided by PHP. 
+					Expressions are replaced with their evaluation result in the output contents.
+				</p>
+				<p>
+					As for the PHP language, variable names must be prefixed by the "$" sign ; for example (using our example <i>$variables</i> described above) :
+				</p>
+				<div class="code">
+%$VNAME%
+				</div>
+				<p>
+					will be substituted with :
+				</p>
+				<div class="code">
+the value of vname1
+				</div>
+				<p>
+					Referencing a variable name can be considered as the simplest possible expression ; when it comes to more complex expressions,
+					you will need to enclose them with <span class="highight">%(</span> and <span class="highight">%)</span> :
+				</p>
+				<div class="code">
+Current index : %($INDEX + 100)%
+Today is : %( date ( 'd/m/Y' ) )%
+				</div>
+				<p>
+					An expression can use any syntactic element allowed by PHP ; in addition, you can also call builtin functions, as the <i>date()</i> function in 
+					the above example.
+				</p>
+				<p>
+					Undefined variables will be expanded to an empty string and a warning will be issued, unless the <i>$warnings</i> parameter of the class 
+					constructor has been set to false.
+				</p>
+				<p>
+					Note that variable names are case-sensitive.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftemplater-language-if">IF constructs</h4>
+			<div class="h4">
+				<p>
+					<b>IF</b> constructs are a way to conditionally include text in your output document ; as for the traditional <i>if</i> statements in
+					various programming languages, the <b>IF</b> statement accepts an expression enclosed with parentheses. You can use any syntactic element 
+					recognized by PHP, call builtin functions and reference variables passed to the class constructor :
+				</p>
+				<div class="code">
+%IF ( $TITLE  ==  'M.' )%The value of TITLE is : "M"%END%
+				</div>
+				<p>
+					In the above example, the output document will contain the following string if the value of the <i>$TITLE</i> variable has been set to
+					"M." :
+				</p>
+				<div class="code">
+The value of TITLE is : "M"
+				</div>
+				<p>
+					An <b>IF</b> construct can have as many <b>ELSEIF</b> alternatives as needed, and an optional <b>ELSE</b> statement :
+				</p>
+				<div class="code">
+%IF ( $INDEX  == 19 )%
+	index = 19
+%ELSEIF ( $INDEX == 18 )%
+	index = 18
+%ELSE%
+	index is neither 19 nor 18.
+%END%
+				</div>
+				<p>
+					Using our example <i>$variables</i> array where the <i>$INDEX</i> variable has the value <i>17</i>, you will notice that the output 
+					document will contain two empty lines before the string : <i>index is neither 19 nor 18.</i>.
+				</p>
+				<p>
+					This is due to the fact that a paragraph mark (a line break) has been inserted after each ending percent sign of each <b>IF</b> and <b>ELSEIF/ELSE</b>
+					statements. If you would like no line break to be inserted in the output, and still preserve the readability of your macro-language constructs, then
+					you could put the ending percent at the beginning of the next line :
+				</p>
+				<div class="code">
+%IF ( $INDEX  == 19 )
+	%index = 19
+%ELSEIF ( $INDEX == 18 )
+	%index = 18
+%ELSE
+	%index is neither 19 nor 18.
+%END%
+				</div>
+			</div>
+
+			<h4 id="reference-rtftemplater-language-for">FOR loops</h4>
+			<div class="h4">
+				<p>
+					<b>FOR</b> loops are a way to repeat text a certain number of times. Specify a start and end index :
+				</p>
+				<div class="code">
+%FOR ( $i = 1 TO $INDEX )
+	%This is line #%$i%
+%END%
+				</div>
+				<p>
+					The above example will insert 17 lines in the output document (the <i>INDEX</i> variable has been defined to be 17 in our variables array), from
+					&laquo;<i>This is line #1</i>&raquo; to &laquo;<i>This is line #17</i>&raquo;.
+				</p>
+				<p>
+					You can also specify an optional step :
+				</p>
+				<div class="code">
+%FOR ( $i = 1 TO $INDEX BY 2 )%
+
+or :
+
+%FOR ( $i = 1 TO $INDEX STEP 2 )%
+				</div>
+			</div>
+
+			<h4 id="reference-rtftemplater-language-foreach">FOREACH loops</h4>
+			<div class="h4">
+				<p>
+					<b>FOREACH</b> loops are based on array variables (look at the 'ARRAY' entry of the <i>$variables</i> array in the example above).
+				</p>
+				<p>
+					The following instruction will output the text "string a", "string b", "string c" on separate lines :
+				</p>
+				<div class="code">
+	%FOREACH ( $value IN $ARRAY )%%$value%
+	%END%
+				</div>
+			</div>
+
+			<h4 id="reference-rtftemplater-language-repeat">REPEAT loops</h4>
+			<div class="h4">
+				<p>
+					<b>REPEAT</b> loops are only a shortcut for <b>FOR</b> loops :
+				</p>
+				<div class="code">
+%REPEAT ( $i = $INDEX )%
+				</div>
+				<p>
+					is equivalent to :
+				</p>
+				<div class="code">
+%FOR ( $i = 1 TO $INDEX )%
+				</div>
+			</div>
+
+			<h4 id="reference-rtftemplater-language-predefined">Predefined variables</h4>
+			<div class="h4">
+				<p>
+					The following variables are predefined and can be referenced anywhere :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							FILENAME : Name of the input template file. Expands to an empty string for objects of class
+							<span class="highlight">RtfStringTemplater</span>.
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<h4 id="reference-rtftemplater-language-percentsigns">Coping with percent signs</h4>
+			<div class="h4">
+				<p>
+					The templater class does its best in trying to distinguish control statements from pure text. It will for example correctly handle the following case :
+				</p>
+				<div class="code">
+Tax rate is : 20%
+some other text
+%$VNAME%
+				</div>
+				<p>
+					However, if you follow "20%" with a sign that is recognized as the start of an expression, such as an opening parenthesis :
+				</p>
+				<div class="code">
+Tax rate is : 20% (since 2016)
+some other text
+%$VNAME%
+				</div>
+				<p>
+					then it will try to interpret the string "<i>% (since 2016) some other text%</i>" as an expression and will issue a warning, 
+					because this is not a valid computed expression.
+				</p>
+				<p>
+					To avoid such situations, simply double the percent sign, as in the following :
+				</p>
+				<div class="code">
+Tax rate is : 20%% (since 2016)
+				</div>
+			</div>
+
+			<h4 id="reference-rtftemplater-language-rtfinternals">Under the hood...</h4>
+			<div class="h4">
+				<p>
+
+				</p>
+			</div>
 
 		<h3 id="reference-rtftemplater-constructor">Constructor</h3>
 		<div class="h3">	
+			<p>
+				The <span class="highlight">RtfTemplater</span> abstract base class has the following constructor :
+			</p>
+			<div class="code">
+public function  __construct  ( $variables, $warnings = true )
+			</div>
+			<p>
+				The parameters are the following :
+			</p>
+			<div class="item-list">
+				<ul>
+					<li>
+						<span class="highlight">$variables</span> (<i>associative array</i>) :<br />
+						<div>
+							An associative array which defines the variables that can be referenced from within the document template to customize
+							its contents.
+							<p>
+								Each array key is the name of a document variable ; the corresponding value must either be a scalar value or an array.
+								When defined as an array value, the variable can be referenced in a <span class="highlight">%FOREACH%</span> instruction.
+							</p>
+						</div>
+					</li>
+					<li>
+						<span class="highlight">$warnings</span> (<i>boolean</i>) :<br />
+						<div>
+							When true, warnings will be issued if incorrect situations are found, such as undefined variables being referenced, or 
+							syntax errors in some instructions.
+						</div>
+					</li>
+				</ul>
+			</div>
 		</div>
 
 		<h3 id="reference-rtftemplater-methods">Methods</h3>
 		<div class="h3">	
+			<h4 id="reference-rtftemplater-asstring">public function  <span class="header-highlight">AsString</span> ( )</h4>
+			<div class="h4">
+				<p>
+					Returns the preprocessed contents of an Rtf template as a string, using the variables that have been specified to the class constructor.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftemplater-separatetextfromrtf">public function  <span class="header-highlight">SeparateTextFromRtf</span> ( $contents )</h4>
+			<div class="h4">
+				<p>
+					Separates the tags and text parts of a piece of Rtf contents.
+				</p>
+				<p>
+					This function is especially used for extracting template constructs delimited by percent signs. It may
+					happen that due to user manipulations in the template document, some Rtf tags may be interspersed with
+					real template constructs.
+				</p>
+				<p>
+					Imagine for example that in the string <span class="highlight">%$VNAME2%"</span>, the <span class="highlight">"%V"</span> and 
+					<span class="highlight">"2%"</span> parts have been put in boldface ; the corresponding Rtf code may look like :
+				</p>
+				<div class="code">
+<span style="color: red; font-weight: bold">%$VN</span>}{\rtlch\fcs1 \af0 \ltrch\fcs0 \lang2057\langfe1036\langnp2057\insrsid15075231 <span style="color: red; font-weight: bold">AM</span>}
+{\rtlch\fcs1 \af0 \ltrch\fcs0 \b\lang2057\langfe1036\langnp2057\insrsid15075231
+\charrsid15075231 <span style="color: red; font-weight: bold">E2%</span>
+				</div>
+				<p>
+					This method ensures that both the original text contents (<span class="highlight">%$VNAME%</span>) and Rtf data will be preserved, 
+				</p>
+				<p>
+					It returns an associative array containing two entries :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">rtf</span> : Rtf contents.
+						</li>
+						<li>
+							<span class="highlight">text</span> : Pure text contents (<span class="highlight">%$VNAME2%</span> in the above example).
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<h4 id="reference-rtftemplater-saveto">public function  <span class="header-highlight">SaveTo</span> ( $filename )</h4>
+			<div class="h4">
+				<p>
+					Saves the preprocessed contents of an Rtf templte to a file, using the variables that have been specified to the class constructor.<br />
+					Note that this method does not needs to load the entire document contents into memory before generating its output :
+					it reads input data by blocks and generates output data on-the-fly.
+				</p>
+			</div>
 		</div>
 
 		<h3 id="reference-rtftemplater-properties">Properties</h3>
 		<div class="h3">	
+			<h4 id="reference-rtftemplater-properties-variables">public $Variables</h4>
+			<div class="h4">
+				<p>
+					Document variables, as specified to the class constructor. Since this variable is public, it can be freely changed after instantiating the class.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftemplater-properties-warnings">public $Warnings</h4>
+			<div class="h4">
+				<p>
+					Enables/disables warnings. The initial value of this property has been passed to the constructor.
+				</p>
+			</div>
+
+			<h4 id="reference-rtftemplater-properties-tagswithtextparameter">private static $TagsWithTextParameter</h4>
+			<div class="h4">
+				<p>
+					This internal array is used by the <span class="highlight">SeparateTextFromRtf</span> method to identify Rtf tags that always include a text parameter,
+					which is not to be confused with regular text coming from the document.
+				</p>
+			</div>
+		</div>
+
+		<h3 id="reference-rtftemplater-rtfstringtemplater">RtfStringTemplater class</h3>
+		<div class="h3">	
+
+			<h4 id="reference-rtfstringtemplater-constructor">public function  <span class="header-highlight">__construct</span> ( $rtfdata, $variables = [], $warnings = true, $chunk_size = 4 * 1024 * 1024 )</h4>
+			<div class="h4">
+				<p>
+					Creates an RtfTemplater object, using the specified Rtf data as the template.
+				</p>
+				<p>
+					A typical usage could be :
+				</p>
+				<div class="code">
+$variables	=  [ 'FIRSTNAME' => 'Jane', 'LASTNAME' => 'Doe' ] ;
+$doc		=  new RtfStringTemplater ( file_get_contents ( 'sample.rtf', $variables ) ) ;
+$doc -> SaveTo ( 'sample.txt' ) ;		// Save templated contents to output file
+echo $doc -> AsString ( ) ;			// Echo templated contents to standard output 
+				</div>
+
+				<p>
+					The parameters are the following :
+				</p>
+
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$rtfdata</span> (<i>string</i>) :<br />
+							<div>
+								Rtf document data, specified as a string.
+							</div>
+						</li>
+						<li>
+							<span class="highlight">$variables</span> (<i>associative array</i>) :<br />
+							<div>
+								An associative array which defines the variables that can be referenced from within the document template to customize
+								its contents.
+								<p>
+									Each array key is the name of a document variable ; the corresponding value must either be a scalar value or an array.
+									When defined as an array value, the variable can be referenced in a <span class="highlight">%FOREACH%</span> instruction.
+								</p>
+							</div>
+						</li>
+						<li>
+							<span class="highlight">$warnings</span> (<i>boolean</i>) :<br />
+							<div>
+								When true, warnings will be issued if incorrect situations are found, such as undefined variables being referenced, or 
+								syntax errors in some instructions.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$chunk_size</span> (<i>integer</i>) :<br />
+							<div>
+								Buffer size used when generating output by blocks.
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<h3 id="reference-rtftemplater-rtffiletemplater">RtfFileTemplater class</h3>
+		<div class="h3">	
+			<h4 id="reference-rtffiletemplater-constructor">public function  <span class="header-highlight">__construct</span> ( $file, $variables = [], $warnings = true, $record_size = 16384 )</h4>
+			<div class="h4">
+				<p>
+					Creates an RtfTemplater object, using the specified Rtf file as a template.
+				</p>
+				<p>
+					A typical usage could be :
+				</p>
+				<div class="code">
+$variables	=  [ 'FIRSTNAME' => 'Jane', 'LASTNAME' => 'Doe' ] ;
+$doc		=  new RtfFileTemplater ( file_get_contents ( 'sample.rtf', $variables ) ) ;
+$doc -> SaveTo ( 'sample.txt' ) ;		// Save templated contents to output file
+echo $doc -> AsString ( ) ;			// Echo templated contents to standard output 
+				</div>
+
+				<p>
+					The parameters are the following :
+				</p>
+
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$file</span> (<i>string</i>) :<br />
+							<div>
+								Path to an existing document
+							</div>
+						</li>
+						<li>
+							<span class="highlight">$variables</span> (<i>associative array</i>) :<br />
+							<div>
+								An associative array which defines the variables that can be referenced from within the document template to customize
+								its contents.
+								<p>
+									Each array key is the name of a document variable ; the corresponding value must either be a scalar value or an array.
+									When defined as an array value, the variable can be referenced in a <span class="highlight">%FOREACH%</span> instruction.
+								</p>
+							</div>
+						</li>
+						<li>
+							<span class="highlight">$warnings</span> (<i>boolean</i>) :<br />
+							<div>
+								When true, warnings will be issued if incorrect situations are found, such as undefined variables being referenced, or 
+								syntax errors in some instructions.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$record_size</span> (<i>integer</i>) :<br />
+							<div>
+								Buffer size used for both reading the template document and generating an output custom document.
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
 		</div>
 	</div>
 	</div>
@@ -2832,8 +3318,8 @@ Alfred Jarry, Senior Pataphysics Engineer.
 				The class diagram for the <span class="highlight">RtfTexter</span> class is the following :
 			</p>
 			<center>
-				<a href="/images/Modeling - RtfTexter.png" target="_blank"
-					><img src="/images/Modeling - RtfTexter.png" title="RtfTexter class hierarchy" width="325" height="372"/></a>
+				<a href="/images/Modeling-RtfTexter.png" target="_blank"
+					><img src="/images/Modeling-RtfTexter.png" title="RtfTexter class hierarchy" width="325" height="372"/></a>
 			</center>
 		</div>
 
@@ -3610,8 +4096,8 @@ public function  __construct ( $parent, $document, $global_header )
 				The following diagram shows the hierarchy of the various <span class="highlight">RtfToken</span> classes :
 			</p>	
 			<center>
-				<a href="/images/help/Modeling - RtfToken.png" target="_blank"
-					><img src="/images/help/Modeling - RtfToken.png" title="Overview of the RtfToken class hierarchy" width="380" height="465"/></a>
+				<a href="/images/help/Modeling-RtfToken.png" target="_blank"
+					><img src="/images/help/Modeling-RtfToken.png" title="Overview of the RtfToken class hierarchy" width="380" height="465"/></a>
 			</center>
 		</div>
 
