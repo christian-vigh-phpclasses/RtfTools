@@ -198,6 +198,10 @@
 	. The __evaluate() method reported the last error defined before calling it, instead of resetting it
 	  before calling the eval() function().
 
+    [Version : 1.0.2]	[Date : 2016-11-03]     [Author : CV]
+	. The variables passed to the constructor were not created in the __evaluate() method prior to calling
+	  the PHP eval() function.
+
  **************************************************************************************************************/
 require_once ( dirname ( __FILE__ ) . '/RtfDocument.phpclass' ) ;
 
@@ -1218,7 +1222,7 @@ abstract class 	RtfTemplater 	extends  RtfDocument
 	//	Variables values are searched in the following order :
 	//	- In the $Variables property, which has been passed to the class constructor
 	//	- In the global variables
-	private function  __evaluate_expression ( $text )
+	private function  __evaluate_expression ( $expr )
 	   {
 		// Clear any previous error
 		// This is a horrible kludge to "clear" the last error for PHP versions < 7, which do not have the error_clear_last() function
@@ -1231,8 +1235,14 @@ abstract class 	RtfTemplater 	extends  RtfDocument
 			restore_error_handler ( ) ;
 		    }
 
+		// Create the variables here so that they will be visible from the eval'ed code
+		foreach (  $this -> Variables  as  $name => $value )
+		   {
+			${$name}	=  $value ;
+		    }
+
 		// Evaluate the expression
-		$result		=  @eval ( $expr ) ;
+		$result		=  @eval ( "return $expr;" ) ;
 
 		// Now, either there was no error ; in this case, the last error will not have been reset and we should have a message
 		// talking about an undefined variable named "__error_get_last_horrible_kludge__" that we tried to reference at the entry
