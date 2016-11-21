@@ -25,6 +25,9 @@
 	. The $Eol property was never set to a correct value.
 	. Removed the useless $record_size parameter from the TextifyData() method.
 
+    [Version : 1.0.4]   [Date : 2016/11/21]     [Author : CV]
+	. The RtfParser::IgnoreCompounds() methods was not called.
+
  **************************************************************************************************************/
 
 require_once ( dirname ( __FILE__ ) . '/RtfDocument.phpclass' ) ;
@@ -208,6 +211,8 @@ abstract class	RtfTexter	extends		RtfParser
 
 		$this -> SetOptions ( $options ) ;
 		$this -> PageWidth 	=  $page_width ;
+
+		$this -> IgnoreCompounds ( self::$IgnoreList ) ;
 	    }
 
 
