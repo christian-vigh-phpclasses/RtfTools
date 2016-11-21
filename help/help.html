@@ -46,7 +46,7 @@ $(document). ready
 					return ;
 
 				var	collapse_div_html	=  '<div class="collapse-button" id="' + contents_id + '-start" data-contents="' + 
-									contents_id + '"><img src="images/tree-collapse.png"/>&nbsp;&nbsp;' ;
+									contents_id + '"><img src="/images/tree-collapse.png"/>&nbsp;&nbsp;' ;
 
 				header. html ( collapse_div_html + header_html + '</div>') ;
 				contents. attr ( 'id', contents_id ) ;
@@ -55,7 +55,7 @@ $(document). ready
 									'class="collapse-button-end" id="' + contents_id + '-end" ' +
 									'data-contents="' + contents_id + '">' +
 								   '<tr>' +
-									'<td style="padding-top: 3px"><img "images/tree-collapse.png"/></td>' +
+									'<td style="padding-top: 3px"><img src="/images/tree-collapse.png"/></td>' +
 									'<td style="white-space: nowrap; vertical-align: top; color: #0000FF">&nbsp;Close topic <i>"' + header_html + '"</i>&nbsp;</td>' +
 									'<td style="width: 100%; padding-top: 14px"><hr/>' +
 								   '</tr>' +
@@ -1680,8 +1680,6 @@ echo $doc -> AsString ( ) ;			// Echo pretty-printed contents to standard output
 				</div>
 			</div>
 
-
-
 		<h3 id="reference-rtffilebeautifier">RtfFileBeautifier class</h3>
 		<div class="h3">	
 		</div>
@@ -2585,8 +2583,48 @@ foreach  ( $merger  as  $doc )
 	<div class="collapsable">
 	<h2 id="reference-rtfparser">RtfParser class</h2>
 	<div class="collapsable-contents">
-	<div class="h2">	
+	<div class="h2">
+		<p>
+			The <span class="highlight">RtfParser</span> class is a general class that you can use to parse Rtf contents. It's a little bit more than a parser, however,
+			because it handles special constructs that are specific to certain tags (or control words) ; it features the following :
+		</p>	
+		<div class="item-list">
+			<ul>
+				<li>
+					Handling of special tags such as <span class="highlight">\pict</span>, a compound construct that embeds image data ; and
+					<span class="highlight">\bin</span>, another compound construct that embeds arbitrary binary data whose length is specified
+					as a parameter of the <span class="highlight">\bin</span> control word itself.
+				</li>
+				<li>
+					Handling of special control words, which define a parameter that later affects how other related control words are to be interpreted.
+				</li>
+			</ul>
+		</div>
+
+		<p>
+			Parsing an Rtf file only requires to repeatedly call the <span class="highlight">NextToken()</span> method, which returns an object inherited from
+			the <a href="#internal-reference-rtftoken">RtfToken</a> class, that gives all the necessary information about the next Rtf token available.
+		</p>
 	</div>
+
+		<h3 id="reference-rtfparser-overview">Overview</h3>
+		<div class="h3">	
+			<p>
+				The simplest program to parse Rtf contents could look like this :
+			</p>
+			<div class="code">
+&lt;?php
+	require ( 'RtfParser.phpclass' ) ;
+
+	$file		=  "sample.rtf" ;
+	$parser		=  new RtfFileParser ( $file ) ;
+
+	while  ( ( $token = $parser -> NextToken ( ) )  !==  false )
+	   {
+		// do something with $token
+	    }
+			</div>
+		</div>
 
 		<h3 id="reference-rtfparser-diagram">Class diagram</h3>
 		<div class="h3">	
@@ -2601,23 +2639,293 @@ foreach  ( $merger  as  $doc )
 
 		<h3 id="reference-rtfparser-constructor">Constructor</h3>
 		<div class="h3">	
+			<p>
+				The <span class="highlight">RtfParser</span> abstract base class has the following constructor :
+			</p>
+			<div class="code">
+public function  __construct  ( ) ;
+			</div>
+			<p>
+				No particular parameter is required.
+			</p>
 		</div>
 
 		<h3 id="reference-rtfparser-methods">Methods</h3>
 		<div class="h3">	
 		</div>
 
+			<h4 id="reference-rtfparser-methods-getcontrolwordvalue">public function  GetControlWordValue ( $word, $default = '' )</h4>
+			<div class="h4">
+				<p>
+					Gets the currently applicable parameter value for the specified control word.<br />
+					The best example I can give for explaining the utility of this method is regarding Unicode characters,
+					which are specified by the <span class="highlight">\u</span> tag like in the following example :
+				</p>
+				<div class="code">
+\u10356
+				</div>
+				The Rtf specification states that Unicode characters are followed by character symbols (using the "\'" tag) which specify the number
+				of the code page that best matches the Unicode character that precedes :
+				<div class="code">
+\u10356\'a1\'b0
+				</div>
+				<p>
+					The number of character symbols that follow a Unicode character specification is given by the <span class="highlight">\uc</span> tag ; 
+					in the above example, it should be written like this :
+				</p>
+				<div class="code">
+\uc2 \u10356\'a1\'b0
+				</div>
+				<p>
+					However, the specification states that this number (the parameter of the <span class="highlight">\uc2</span> tag) should be tracked and
+					that a stack of applicable values depending on the current
+					curly brace nesting level should be handled (the <span class="highlight">\uc</span> tag may be present elsewhere in the document, not specifically before
+					Unicode character specifications, and its default value should be 1).
+				</p>
+				<p>
+					So, in the above example, we have to answer the question : "What is the current value of the <span class="highlight">\uc</span> tag ?" whenever
+					we encounter a <span class="highlight">\u</span> tag, to be able to determine the number of character symbols that should follow it. 
+				</p>
+				<p>
+					For example, if the current value of the <span class="highlight">\uc</span> tag is 1, then the following sequence will be interpreted as 
+					Unicode character #10356, and the nearest code page that can represent this character will be 161 (0xa1) ; the Unicode character is 
+					followed by an uppercase <b>A</b> (<span class="highlight">\'41</span>) :
+				</p>
+				<div class="code">
+\u10356\'a1\'41
+				</div>
+				<p>
+					If the current value of the <span class="highlight">\uc</span> tag is 2, then the above sequence will be interpreted as Unicode character #10356,
+					and the nearest code page that can represent this character will be 41281 (0xa141).
+				</p>
+				<p>
+					To be able to handle such a situation, you will first have to call the <a href="#reference-rtfparser-methods-trackcontrolword">TrackControlWord()</a>
+					method to tell the parser that we want to track the current value of the <span class="highlight">\uc</span>, as in the following example :
+				</p>
+				<div class="code">
+$parser -> TrackControlWord ( 'uc', true, 1 ) ;
+				</div>
+				<p>
+					Then whenever a <span class="highlight">\u</span> control word specifying a Unicode character is encountered when parsing an Rtf document, you can call
+					this method to retrieve the currently applicable value for <span class="highlight">\uc</span> :
+				</p>
+				<div class="code">
+$uc_value = $parser -> GetControlWordValue ( 'uc' ) ;
+				</div>
+				<p>
+					The parameters are the following :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">$word</span> (<i>string</i>) :<br />
+							<div>
+								Control word whose current parameter value is to be retrieved, without the leading backslash.
+							</div>
+						</li>
+						<li>
+							<span class="highlight">$default</span> (<i>mixed</i>) :<br />
+							<div>
+								Default value to be returned, if the control word has not been tracked using the 
+								<span class="highlight">TrackControlWord</span> method.
+							</div>
+						</li>
+					</ul>
+				</div>
+				The <span class="highlight">GetControlWordValue</span> method returns either the current parameter value for the specified control word (which is dependent of the
+				current nesting level if the control word is stackable), or <span class="highlight">$default</span> otherwise.
+			</div>
+
+			<h4 id="reference-rtfparser-methods-ignorecompounds">public function  IgnoreCompounds ( $list )</h4>
+			<div class="h4">
+				<p>
+					When parsing an Rtf document, not all control words may be of interest to you. This method allows you to supply the list of control words you want to be
+					ignored, as an array of strings :
+				</p>
+				<div class="code">
+$parser -> IgnoreCompounds ( [ 'fonttbl', 'listtable', 'listoverridetable', 'pict' ] ) ;
+				</div>
+				<p>
+					When implementing a class inheriting from <span class="highlight">RtfParser</span>, you should consider which tags (or control words) are useless
+					for the task you want to carry on ; parsing a whole Rtf document can be slow, so helping the parser by telling him which tags can be safely ignored
+					will result in performance improvement. This is especially true for control words such as <span class="highlight">\pict</span> or
+					<span class="highlight">\bin</span>, which can embed huge amount of data.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfparser-methods-nexttoken">public function  NextToken ( )</h4>
+			<div class="h4">
+				<p>
+					Returns the next available token from the Rtf input stream. The returned value is of type <a href="#internal-reference-rtftoken">RtfToken</a>,
+					or false if all tokens have been processed.
+				</p>
+				<p>
+					This methods skips the tokens that are to be ignored, ie the ones that has been specified to a call to the 
+					<span class="highlight">IgnoreCompounds</span> method.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfparser-methods-reset">public function  Reset ( )</h4>
+			<div class="h4">
+				<p>
+					Resets the parser object, so that parsing can start again from the beginning.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfparser-methods-skipcompound">public function  SkipCompound ( )</h4>
+			<div class="h4">
+				<p>
+					Some Rtf constructs may not be of interest to you, depending on the result you want to achieve. Suppose
+					for example that you do not want to interpret anything coming from the font table, which has a definition that
+					looks like :
+				</p>
+				<div class="code">
+{\fonttbl{font definition 1}...{font definition n}}
+				</div>
+				<p>
+					<span class="highlight">SkipCompound</span> allows you to continue past the closing brace that terminates the font table started by
+					<i>{\fonttbl</i>, ignoring any content between these two delimiters.
+				</p>
+				<p>
+					Note that the function will decrement the current brace nesting level.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfparser-methods-trackcontrolword">public function  TrackControlWord ( $word, $stackable, $default_value = false )</h4>
+			<div class="h4">
+				<p>
+					Tracks a control word specification in the current Rtf document. This allows for example to associate
+					raw data with a control word, such as for the <span class="highlight">\pict</span> tags.
+				</p>
+				<p>
+					It also allows you to track control words whose value can be changed when entering a new nesting level and must be restored
+					when exiting this nesting level (this is the case for example of the <span class="highlight">\uc</span>
+				</p>
+				<p>
+					Parameters are the following :
+				</p>
+				<div class="item-list">
+					<ul>
+						<li>
+							<span class="highlight">$word</span> (<i>string</i>) :
+							<div>
+								Control word to be tracked.
+							</div>
+						</li>
+						<li>
+							<span class="highlight">$stackable</span> (<i>boolean</i>) :
+							<div>
+								Indicates whether the control word parameter value can be nested within braces. This is not the
+								case for example of <span class="highlight">\pict</span> constructs, where the first data available will be the image contents
+								themselves ; however, constructs such as <span class="highlight">\uc<i>x</i></span>, where "<i>x</i>" represents 
+								the number of bytes in a Unicode character specification that can be found afterwards, can be stacked. Every closing 
+								brace will pop up the last value of <i>x</i>.
+							</div>
+						</li>
+						<li>
+							<span class="highlight">$default_value</span> (<i>string</i>) :
+							<div>
+								When non-false, specifies an initial default value for the control word. This parameter is mainly
+								used for stackable control words.
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+	
 		<h3 id="reference-rtfparser-properties">Properties</h3>
 		<div class="h3">	
 		</div>
+			<h4 id="reference-rtfparser-properties-currentcolumn">$CurrentColumn</h4>
+			<div class="h4">
+				<p>
+					Returns the current column position in the parsed Rtf document. Columns are numbered from 1.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfparser-properties-currentline">$CurrentLine</h4>
+			<div class="h4">
+				<p>
+					Returns the current line in the parsed Rtf document. Lines are numbered from 1.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfparser-properties-currentposition">$CurrentPosition</h4>
+			<div class="h4">
+				<p>
+					Returns the current byte offset from the start of the file. Byte offsets start at 0.
+				</p>
+			</div>
+
+			<h4 id="reference-rtfparser-properties-nestinglevel">$NestingLevel</h4>
+			<div class="h4">
+				<p>
+					Current nesting level of curly braces.
+				</p>
+			</div>
 
 		<h3 id="reference-rtfparser-rtfstringparser">RtfStringParser class</h3>
 		<div class="h3">	
 		</div>
+			<h4 id="reference-rtfstringparser-constructor">public function  __construct ( $rtfdata, $chunk_size = 4 * 1024 * 1024 )</h4>
+			<div class="h4">
+				<p>
+					Creates an RtfParser object, using the specified Rtf data as a string.
+				</p>
+
+				<p>
+					The parameters are the following :
+				</p>
+
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$rtfdata</span> (<i>string</i>) :<br />
+							<div>
+								Rtf document data to be parsed.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$chunk_size</span> (<i>integer</i>) :<br />
+							<div>
+								Not used.
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
 
 		<h3 id="reference-rtfparser-rtffileparser">RtfFileParser class</h3>
 		<div class="h3">	
 		</div>
+
+			<h4 id="reference-rtffileparser-constructor">public function  __construct ( $file, $record_size = 16384 )</h4>
+			<div class="h4">
+				<p>
+					Creates an RtfParser object, using the specified Rtf document.
+				</p>
+
+				<p>
+					The parameters are the following :
+				</p>
+
+				<div class="item-list">
+					<ul>
+						<li class="parameter">
+							<span class="highlight">$file</span> (<i>string</i>) :<br />
+							<div>
+								Name of the file to be parsed.
+							</div>
+						</li>
+						<li class="parameter">
+							<span class="highlight">$record_size</span> (<i>integer</i>) :<br />
+							<div>
+								Record size to be used when reading the Rtf document.
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
 	</div>
 	</div>
 
