@@ -87,7 +87,7 @@ Saves the merged contents of all the documents that have been added either throu
 
 ## Properties ##
 
-# Options #
+### Options ###
 
 A combination of the following flags :
 
@@ -97,7 +97,23 @@ A combination of the following flags :
 
 When nothing is specified, the *RTFMERGE\_STRINGS\_AS\_FILENAMES* flag is the default option.
 
-# Document information properties #
+### DocumentSeparator ###
+
+A string containing Rtf code to be used to separate each document being merged. The default string is :
+
+	"\\sect\r\n"
+
+which creates a new section (hence a page break). Note that the are not necessary ; they just put a line break in the Rtf source code, which could help you to identify document separator if you are editing the merged document using a text editor such as *Notepad*.
+
+To put a line break between each merged document, just do the following :
+
+	$merger -> DocumentSeparator 	=  "\\par" ;
+
+To simply catenate Rtf documents without any separation, set the *DocumentSeparator* property to the empty string :
+
+	$merger -> DocumentSeparator 	=  "" ;  
+
+### Document information properties ###
 
 Each individual document to be merged contains its own set of information ; this can be for example the author name, the document title, some comments or keywords to be associated with the document, and so on.
 

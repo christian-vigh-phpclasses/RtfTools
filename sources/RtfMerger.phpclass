@@ -55,6 +55,9 @@
 	. There was a name mismatch between the document information properties (Title, Subject, etc.) and their
 	  counterparts in the $GlobalHeader object (InfoTitle, InfoSubject, etc.).
 
+    [Version : 1.0.2]	[Date : 2017-02-20]     [Author : CV]
+	. Added the DocumentSeparator property.
+
  **************************************************************************************************************/
 
 require_once ( dirname ( __FILE__ ) . '/RtfDocument.phpclass' ) ;
@@ -86,6 +89,10 @@ class  RtfMerger		//extends		Object
 	protected	$Documents			=  [] ;
 	// Merging options
 	public		$Options			=  self::RTFMERGE_NONE ;
+	// Document separator - the default is to put a new section, which implies a page break
+	// You can set it to an empty string if you don't want any separator at all, or set it to any Rtf code you like
+	// For example, "\\par" will separate documents with a line break
+	public		$DocumentSeparator		=  "\\sect\r\n" ;
 	// Global header - This object is to be seen as a way for RtfMergerDocument objects to use/define static data that is
 	// local ony to a particular RtfMerger class instance
 	private		$GlobalHeader ;
@@ -286,7 +293,7 @@ class  RtfMerger		//extends		Object
 		foreach  ( $this -> Documents  as  $document )
 		   {
 			$result		.=  $document -> GetBody ( ) . $section ;
-			$section	=  "\\sect\r\n" ;
+			$section	=  $this -> DocumentSeparator ;
 		    }
 
 		return ( $result ) ;
@@ -328,7 +335,7 @@ class  RtfMerger		//extends		Object
 		   {
 			$data		=  $document -> GetBody ( ) ;
 			fwrite ( $fp, "$section$data\r\n" ) ;
-			$section	=  "\\sect\r\n" ;
+			$section	=  $this -> DocumentSeparator ;
 		    }
 
 		fwrite ( $fp, "}" ) ;
