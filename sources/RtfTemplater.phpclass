@@ -344,7 +344,7 @@ abstract class 	RtfTemplater 	extends  RtfDocument
 			// This flags tells whether your current PHP version has the error_clear_last() function (PHP >= 7) or
 			// whether we will need a horrible kludge to bypass this limitation
 			if  ( function_exists ( 'error_clear_last' ) )
-				self::$ErrorClearLast	=  true ;
+				self::$HasErrorClearLast	=  true ;
 
 			self::$RtfTemplaterStaticConstruct	=  true ;
 		     }
